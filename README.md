@@ -25,8 +25,8 @@ from the IDC team.
 
 Can an AI assistant, guided by existing CTDC and IDC skills, help a 
 non-technical researcher go from a biological question to a 
-scientifically useful Jupyter notebook — without the researcher 
-needing to write code or know GraphQL?
+scientifically useful finding backed by a Jupyter notebook — without the researcher 
+needing to have strong coding skills? 
 
 ## Repository Structure
 
