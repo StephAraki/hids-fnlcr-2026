@@ -92,8 +92,7 @@ Before proceeding to routing or planning, confirm all of the following:
 ### Intake Script
 When a researcher presents a biological question, respond with:
 
-> "Before I build your analysis plan, I have a few quick questions to make sure the notebook
-> fits your research question exactly."
+> "Before I build your analysis plan, I have a few quick questions to make sure the notebook fits your research question exactly."
 
 Then ask the required fields as a short numbered list. Do not ask more than five questions in
 one message. If the researcher's initial message already answers some fields, acknowledge
@@ -101,8 +100,7 @@ those and ask only for what's missing.
 
 ### Handling Vague Questions
 If the biological question is too vague to route (e.g., "I want to analyze cancer imaging"),
-ask one clarifying question at a time, starting with cancer type. Do not ask all five intake
-questions until you have established the basic disease context.
+ask one clarifying question at a time, starting with cancer type. Do not ask all five intake questions until you have established the basic disease context.
 
 ---
 
@@ -127,14 +125,10 @@ This skill depends on the CTDC and IDC skills for data discovery steps. Follow t
 - **If the IDC skill is available** in this conversation, defer all imaging collection discovery,
   DICOM download guidance, and metadata queries to it. Reference it explicitly:
   "I'll use the IDC skill to help you find the right collection."
-- **If the IDC skill is not available**, direct the researcher to load it before proceeding with
-  imaging steps. Provide the source: https://github.com/ImagingDataCommons/idc-claude-skill
-- **If the CTDC skill is available**, defer all cohort building, GraphQL queries, and data access
-  questions to it.
-- **If the CTDC skill is not available**, direct the researcher to load it before proceeding with
-  clinical data steps. Provide the source: https://github.com/CBIIT/ctdc-claude-skill
-- **For analysis planning and notebook generation**, this skill acts independently and does not
-  require the other skills to be present.
+- **If the IDC skill is not available**, direct the researcher to load it before proceeding with imaging steps. Provide the source: https://github.com/ImagingDataCommons/idc-claude-skill
+- **If the CTDC skill is available**, defer all cohort building, GraphQL queries, and data access questions to it.
+- **If the CTDC skill is not available**, direct the researcher to load it before proceeding with clinical data steps. Provide the source: https://github.com/CBIIT/ctdc-claude-skill
+- **For analysis planning and notebook generation**, this skill acts independently and does not require the other skills to be present.
 
 ### CTDC + IDC Cross-Commons Pathway
 When both commons are needed, explain this workflow to the researcher before proceeding:
@@ -151,9 +145,7 @@ proceeding to analysis planning.**
 
 ### Access Requirements
 - **IDC data**: Publicly available, no authentication required
-- **CTDC participant-level data**: Requires dbGaP authorization. If the researcher does not
-  have authorization, the notebook can be built as a skeleton with placeholder data loading
-  cells that will work once access is granted. Notify the researcher of this limitation.
+- **CTDC participant-level data**: Requires dbGaP authorization. If the researcher does not have authorization, the notebook can be built as a skeleton with placeholder data loading cells that will work once access is granted. Notify the researcher of this limitation.
 
 ---
 
@@ -177,9 +169,7 @@ Generate an analysis plan with all of the following sections. Do not skip sectio
 - Tumor region of interest (ROI): which mask or segmentation will be used
 - PyRadiomics feature classes to extract
 
-**Before selecting feature classes, load `references/pyradiomics_guide.md`.** Feature class
-selection depends on modality and cancer type and must not be made without consulting
-that reference. Do not list feature classes in the plan until the guide has been read.
+**Before selecting feature classes, load `references/pyradiomics_guide.md`.** Feature class selection depends on modality and cancer type and must not be made without consulting that reference. Do not list feature classes in the plan until the guide has been read.
 
 - Image preprocessing steps (resampling, normalization, intensity discretization)
 
@@ -207,9 +197,7 @@ until the reference has been read.
 ### Presenting the Plan
 After generating the plan, ask:
 
-> "Does this plan match what you had in mind? Let me know if you'd like to adjust the
-> cohort definition, the features, the model choice, or anything else before I generate
-> the notebook."
+> "Does this plan match what you had in mind? Let me know if you'd like to adjust the cohort definition, the features, the model choice, or anything else before I generate the notebook."
 
 Do not proceed to notebook generation until the researcher confirms the plan.
 
@@ -245,17 +233,11 @@ Every generated notebook must follow this section structure, in this order:
 
 ### Cell-Level Standards
 
-**Section headers**: Every major section begins with a markdown cell containing the section
-title and a one-sentence description of what the section does.
+**Section headers**: Every major section begins with a markdown cell containing the section title and a one-sentence description of what the section does.
 
-**Inline comments**: Every non-trivial line of code must have an inline comment explaining
-what it does and why. Target density: at least one comment per 3 lines of code.
+**Inline comments**: Every non-trivial line of code must have an inline comment explaining what it does and why. Target density: at least one comment per 3 lines of code.
 
-**Walkthrough prose cells**: For researchers with no Python experience (expertise level: none),
-include a markdown cell before each code section explaining in plain language what the code
-is about to do and why it matters. For researchers with some experience, include these cells
-only at major transitions (data loading → feature extraction → modeling). For comfortable
-researchers, omit them except where domain-specific context is needed.
+**Walkthrough prose cells**: For researchers with no Python experience (expertise level: none), include a markdown cell before each code section explaining in plain language what the code is about to do and why it matters. For researchers with some experience, include these cells only at major transitions (data loading → feature extraction → modeling). For comfortable researchers, omit them except where domain-specific context is needed.
 
 **USER ACTION REQUIRED cells**: Any cell that requires the researcher to provide input
 (file paths, cohort IDs, parameter choices, credentials) must be marked with a prominent
@@ -270,8 +252,7 @@ DATA_DIR = "/path/to/your/dicom/files"   # Path to downloaded DICOM series
 OUTCOME_COLUMN = "os_event"              # Column name for your outcome variable
 ```
 
-**Blocked section markers**: Any section that requires credentialed CTDC access and cannot
-run without it must be wrapped:
+**Blocked section markers**: Any section that requires credentialed CTDC access and cannot run without it must be wrapped:
 
 ```python
 # === REQUIRES CTDC dbGaP AUTHORIZATION ===
@@ -362,7 +343,7 @@ exact warning format shown below.
 
 #### CP-01: Tumor Mask Selection
 ```python
-# ⚠️ METHODOLOGICAL CHECKPOINT CP-01: Tumor mask selection
+# METHODOLOGICAL CHECKPOINT CP-01: Tumor mask selection
 # The segmentation mask determines which voxels are included in feature extraction.
 # Choices include: whole tumor, tumor core, enhancing region, peri-tumoral margin.
 # This choice significantly affects results and should be validated by a radiologist
@@ -372,7 +353,7 @@ exact warning format shown below.
 
 #### CP-02: Imaging Sequence Selection (MRI)
 ```python
-# ⚠️ METHODOLOGICAL CHECKPOINT CP-02: MRI sequence selection
+# METHODOLOGICAL CHECKPOINT CP-02: MRI sequence selection
 # For multi-parametric MRI, features extracted from T1, T2, T1CE, and FLAIR
 # sequences may yield different predictive value depending on the outcome.
 # Review published literature for your cancer type before finalizing sequence choice.
@@ -381,7 +362,7 @@ exact warning format shown below.
 
 #### CP-03: Class Imbalance
 ```python
-# ⚠️ METHODOLOGICAL CHECKPOINT CP-03: Class imbalance detected
+# METHODOLOGICAL CHECKPOINT CP-03: Class imbalance detected
 # Class distribution: [STATE DISTRIBUTION]
 # Imbalanced classes can cause models to overfit to the majority class.
 # Consider: oversampling (SMOTE), undersampling, class_weight='balanced', or
@@ -391,7 +372,7 @@ exact warning format shown below.
 
 #### CP-04: Data Leakage Risk
 ```python
-# ⚠️ METHODOLOGICAL CHECKPOINT CP-04: Data leakage risk
+# METHODOLOGICAL CHECKPOINT CP-04: Data leakage risk
 # Feature selection and normalization must be fit on training data ONLY and
 # applied to test data. Fitting on the full dataset before splitting is a
 # common source of optimistic bias in radiomic studies.
@@ -400,7 +381,7 @@ exact warning format shown below.
 
 #### CP-05: Overfitting Risk (small sample)
 ```python
-# ⚠️ METHODOLOGICAL CHECKPOINT CP-05: Small sample size
+# METHODOLOGICAL CHECKPOINT CP-05: Small sample size
 # Sample size: [N] with [P] features. High-dimensional radiomic data with
 # small samples is prone to overfitting. Consider:
 # - Dimensionality reduction (PCA, LASSO) before model training
@@ -411,7 +392,7 @@ exact warning format shown below.
 
 #### CP-06: Normalization Strategy
 ```python
-# ⚠️ METHODOLOGICAL CHECKPOINT CP-06: Image normalization
+# METHODOLOGICAL CHECKPOINT CP-06: Image normalization
 # Intensity normalization affects feature reproducibility across scanners and protocols.
 # Standard approaches: z-score normalization, histogram matching, N4 bias correction.
 # Lack of normalization is a common reproducibility failure in multi-site radiomic studies.
