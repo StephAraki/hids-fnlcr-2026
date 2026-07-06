@@ -1,0 +1,49 @@
+# environment.yml for imaging-ml-skill
+#
+# This file reflects a verified working environment (radiomics_env), confirmed on
+# 2026-07-06: `python -c "import radiomics; print(radiomics.__version__)"` returned
+# v3.0.1 with no errors under Python 3.9.25.
+#
+# Conda manages the Python interpreter only. All packages are installed via pip,
+# since the working environment was built with plain pip inside a venv, not conda.
+# This avoids assuming conda-forge resolves pyradiomics the same way pip does --
+# that has not been tested.
+#
+# idc-index is intentionally NOT included below. See the note at the bottom of
+# this file and references/environment_setup.md before adding it.
+
+name: imaging-ml-env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+      - pyradiomics==3.0.1
+      - SimpleITK==2.5.3
+      - scikit-learn==1.6.1
+      - pandas==2.3.3
+      - numpy==2.0.2
+      - scipy==1.13.1
+      - matplotlib==3.9.4
+      - seaborn==0.13.2
+      - PyYAML==6.0.3
+      - jupyterlab==4.5.6
+      - notebook==7.5.5
+      - ipykernel==6.31.0
+      - openpyxl==3.1.5
+
+# --- idc-index: not yet merged into this environment ---
+#
+# Current PyPI idc-index (0.12.3) requires pandas<=2.2.4. This environment pins
+# pandas==2.3.3, based on the verified working radiomics_env. Installing idc-index
+# as listed above would force a pandas downgrade that has not been tested against
+# pyradiomics 3.0.1.
+#
+# Before adding idc-index to this file:
+#   1. Create a throwaway environment from this file.
+#   2. Run: pip install idc-index
+#   3. Confirm pandas is not downgraded below what pyradiomics needs, and that
+#      both `import radiomics` and `from idc_index import IDCClient` succeed
+#      in the same environment.
+#   4. Only then add idc-index to the pip list above with its confirmed version.

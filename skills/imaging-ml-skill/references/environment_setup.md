@@ -5,7 +5,23 @@ troubleshooting steps for the most common PyRadiomics installation failure, and 
 current status of idc-index compatibility.
 
 ## Status
-Last updated: 2026-07-06
+
+Everything in this guide has been tested end to end, not just written. Two setup paths
+were confirmed on 2026-07-06: the conda path (environment.yml) and the manual venv
+path (the pip install block below). Both produced a working import of pyradiomics 3.0.1
+with no errors. The version-check code block was also run directly and confirmed to
+execute without errors, correctly reporting both a missing package and a version
+mismatch when tested against packages that did not match the pins.
+
+This testing was done on one machine: a MacBook Air with an Apple chip, using Python
+3.9 installed through Homebrew. This has not been confirmed on Windows, on Linux, or on
+an Intel Mac. Treat the verified configuration below as confirmed for that specific
+setup, not as confirmed across all platforms.
+
+The pyradiomics 3.1.0 failure on Python 3.12 was independently reproduced, not just
+reported secondhand. The idc-index and pandas version conflict has not been tested and
+is flagged as an open item below; do not treat it as resolved.
+
 
 ## Verified Working Configuration
 
