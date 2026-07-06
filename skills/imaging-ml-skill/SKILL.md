@@ -3,14 +3,14 @@ name: imaging-ml-skill
 description: AI-assisted workflow layer for cancer imaging machine learning research using NCI CRDC data. Use this skill whenever a researcher wants to move from a biological question to an executable imaging ML analysis — including cohort discovery in CTDC, imaging data access in IDC, radiomic feature extraction with PyRadiomics, and reproducible Jupyter notebook generation. Trigger this skill for any request involving cancer imaging analysis, radiomics, imaging ML pipelines, PyRadiomics, CTDC cohort + IDC imaging integration, or notebook generation for cancer imaging research. Also trigger when a user describes a biological question and wants to know how to analyze imaging data computationally, even if they do not use technical terms.
 license: Apache-2.0
 metadata:
-  version: 0.2.0
+  version: 0.2.1
   skill-author: Stephanie Araki
   organization: Frederick National Laboratory for Cancer Research (FNLCR)
   program: Georgetown University HIDS Capstone Internship
   python-version: "3.9"
   pyradiomics-version: "3.0.1"
   repository: https://github.com/StephAraki/hids-fnlcr-2026
-  last-updated: 2026-06-30
+  last-updated: 2026-07-06
 ---
  
 # CTDC-IDC Imaging ML Skill
