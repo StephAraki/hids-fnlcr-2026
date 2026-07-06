@@ -7,8 +7,8 @@ metadata:
   skill-author: Stephanie Araki
   organization: Frederick National Laboratory for Cancer Research (FNLCR)
   program: Georgetown University HIDS Capstone Internship
-  python-version: "3.10 or 3.11"
-  pyradiomics-version: "3.1.0"
+  python-version: "3.9"
+  pyradiomics-version: "3.0.1"
   repository: https://github.com/StephAraki/hids-fnlcr-2026
   last-updated: 2026-06-30
 ---
@@ -354,26 +354,31 @@ Every notebook must begin with a version-pinned environment check cell:
  
 ```python
 import sys
-from packaging.version import Version
 import importlib.metadata
  
 REQUIRED = {
-    "pyradiomics": "3.1.0",
-    "SimpleITK": "2.3.1",
-    "scikit-learn": "1.4.0",
-    "pandas": "2.0.0",
-    "numpy": "1.26.0",
+    "pyradiomics": "3.0.1",
+    "SimpleITK": "2.5.3",
+    "scikit-learn": "1.6.1",
+    "pandas": "2.3.3",
+    "numpy": "2.0.2",
 }
  
 print(f"Python: {sys.version}")
-for pkg, min_ver in REQUIRED.items():
+for pkg, exact_ver in REQUIRED.items():
     try:
         installed = importlib.metadata.version(pkg)
-        status = "OK" if Version(installed) >= Version(min_ver) else f"WARNING: {installed} < {min_ver}"
+        status = "OK" if installed == exact_ver else f"WARNING: {installed} != {exact_ver} (verified version)"
         print(f"{pkg}: {installed} [{status}]")
     except importlib.metadata.PackageNotFoundError:
-        print(f"{pkg}: NOT INSTALLED — run: pip install {pkg}>={min_ver}")
+        print(f"{pkg}: NOT INSTALLED — run: pip install {pkg}=={exact_ver}")
 ```
+ 
+Note this checks for an exact match, not a minimum version. pyradiomics 3.1.0 is a
+confirmed broken version on Python 3.10+ and fails to import on 3.9 — see
+`references/environment_setup.md` for the reproduced failure. A minimum-version check
+would pass a researcher straight into that failure, so this cell intentionally flags
+any version other than the verified one rather than treating newer as automatically fine.
  
 If the notebook includes IDC data access, also call `client.get_idc_version()` in this
 cell (or immediately after) and print the result, per "IDC Download Constraints" above.
@@ -556,37 +561,59 @@ before results are interpreted or reported:
  
 ### Required Python Version
  
-Python 3.10 or 3.11. PyRadiomics has known compatibility issues with Python 3.12+.
+Python 3.9, verified with pyradiomics 3.0.1. Do not use Python 3.10+ or pyradiomics
+3.1.0 — see `references/environment_setup.md` for the reproduced failure mode.
  
 ### Core Dependencies
  
 ```
-pyradiomics>=3.1.0
-SimpleITK>=2.3.1
-scikit-learn>=1.4.0
-pandas>=2.0.0
-numpy>=1.26.0
-matplotlib>=3.8.0
-seaborn>=0.13.0
-idc-index>=0.11.9
-pydicom>=2.4.0
-packaging>=23.0
-jupyterlab>=4.0.0
+pyradiomics==3.0.1
+SimpleITK==2.5.3
+scikit-learn==1.6.1
+pandas==2.3.3
+numpy==2.0.2
+scipy==1.13.1
+matplotlib==3.9.4
+seaborn==0.13.2
+PyYAML==6.0.3
+jupyterlab==4.5.6
+notebook==7.5.5
+ipykernel==6.31.0
+openpyxl==3.1.5
 ```
+ 
+`idc-index` is intentionally not pinned here yet. Current PyPI idc-index (0.12.3)
+requires `pandas<=2.2.4`, which conflicts with the verified `pandas==2.3.3` above.
+This has not been tested together. See `references/environment_setup.md` before
+adding idc-index to any notebook's dependency list.
+ 
+`pydicom` was previously listed here but is not part of the verified environment and
+its actual usage in this skill's generated code has not been confirmed. Do not assume
+it is needed until a specific cell requires it.
  
 ### Virtual Environment Setup
  
 ```bash
-python3.10 -m venv imaging_ml_env
+python3.9 -m venv imaging_ml_env
 source imaging_ml_env/bin/activate   # macOS/Linux
 # imaging_ml_env\Scripts\activate    # Windows
  
 pip install --upgrade pip
-pip install pyradiomics SimpleITK scikit-learn pandas numpy \
-            matplotlib seaborn idc-index pydicom packaging jupyterlab
+pip install pyradiomics==3.0.1 SimpleITK==2.5.3 scikit-learn==1.6.1 \
+            pandas==2.3.3 numpy==2.0.2 scipy==1.13.1 matplotlib==3.9.4 \
+            seaborn==0.13.2 PyYAML==6.0.3 jupyterlab==4.5.6 notebook==7.5.5 \
+            ipykernel==6.31.0 openpyxl==3.1.5
 ```
  
-See `references/environment_setup.md` for troubleshooting PyRadiomics installation errors.
+Or, using conda to manage the interpreter and pip for packages:
+ 
+```bash
+conda env create -f environment.yml
+conda activate imaging-ml-env
+```
+ 
+See `references/environment_setup.md` for troubleshooting PyRadiomics installation errors
+and the current idc-index compatibility status.
  
 ---
  
