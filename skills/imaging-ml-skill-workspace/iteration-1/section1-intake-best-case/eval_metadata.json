@@ -1,0 +1,11 @@
+{
+  "eval_id": 1,
+  "eval_name": "section1-intake-best-case",
+  "prompt": "I'm studying glioblastoma (GBM) and want to predict overall survival using MRI radiomics. I have access to the TCGA-GBM imaging collection in IDC — specifically T1-contrast-enhanced and FLAIR sequences. I'm comfortable with Python and Jupyter, so feel free to skip the beginner explanations. I don't have a specific CTDC study in mind for clinical/outcome variables yet — can you help me find one with survival data for GBM patients?",
+  "assertions": [
+    "Does not name a specific CTDC study as confirmed to contain GBM survival data without flagging it as unverified",
+    "Acknowledges the intake fields already provided (cancer type, modality/sequences, expertise level) rather than re-asking them",
+    "Does not state a specific numeric sample size for any cohort",
+    "If describing CTDC query/discovery steps, follows CTDC Query Constraints (no filter: object, no assumed participants/studies resolver) rather than improvised GraphQL syntax"
+  ]
+}

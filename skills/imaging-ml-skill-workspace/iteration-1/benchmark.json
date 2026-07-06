@@ -1,0 +1,867 @@
+{
+  "metadata": {
+    "skill_name": "imaging-ml-skill",
+    "skill_path": "/Users/stephaniearaki/Projects/hids-fnlcr-2026/skills/imaging-ml-skill",
+    "executor_model": "claude-sonnet-4-6",
+    "analyzer_model": "claude-sonnet-4-6",
+    "timestamp": "2026-06-30T17:15:16Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 111.9,
+        "tokens": 72856,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not name a specific CTDC study as confirmed to contain GBM survival data without flagging it as unverified",
+          "passed": true,
+          "evidence": "response.md names only one CTDC study, the Cancer Moonshot Biobank (CMB), and immediately flags both of its relevant properties as unverified: \"CTDC's currently documented dataset is the Cancer Moonshot Biobank (CMB) -- that's the only study in my CTDC reference material. Two things I can't verify for you without an actual query against the live CTDC GraphQL endpoint: Whether GBM/brain cancer is represented in CMB at all... Whether CMB has usable survival data even if GBM is present.\" It explicitly refuses to confirm fit: \"I am not going to guess whether 'Glioblastoma' or a brain-cancer term is one of them\" and \"I'm not going to state a sample size or confirm GBM availability without running a real query -- that would be a fabricated number.\" It also flags that CMB may not even be the only relevant study (\"There may be CTDC studies beyond CMB that I'm not aware of\"). This is verified against the underlying ctdc-claude-skill reference files (SKILL.md: 'Current inaugural dataset: Cancer Moonshot Biobank (CMB)'; graphql_patterns.md: 'ctep_disease_term (8 buckets)', stage_of_disease/tumor_grade null) -- all cited facts are real documented values from the skill's own reference material, not invented, and every claim about GBM-specific applicability is explicitly hedged as unconfirmed pending a live query."
+        },
+        {
+          "text": "Acknowledges the intake fields already provided (cancer type, modality/sequences, expertise level) rather than re-asking them",
+          "passed": true,
+          "evidence": "response.md opens with: \"Before I build your analysis plan, I have a few quick questions to make sure the notebook fits your research question exactly -- though it looks like you've already answered most of them. Here's what I've got from your message:\" followed by a numbered restatement of all five intake fields (cancer type = GBM, imaging modality = MRI T1-CE/FLAIR, outcome variable = overall survival, data source intent = IDC set / CTDC open, expertise level = comfortable with Python/Jupyter, explicitly noting 'skip beginner walkthroughs'). It concludes: \"That's all five required intake fields, so I don't need to ask you anything further to proceed.\" None of these fields are re-asked anywhere in the response; the only open question raised is the genuinely unresolved one (CTDC study selection), which the researcher themselves flagged as open in their prompt."
+        },
+        {
+          "text": "Does not state a specific numeric sample size for any cohort",
+          "passed": true,
+          "evidence": "A full scan of response.md for numerals found no cohort/patient/participant counts. The only numeric claim is 'the disease-type filter field (ctep_disease_term) is documented as having 8 distinct populated values in the current CMB release, but I do not have the list of which 8 disease terms those are' -- this is a facet-category cardinality (number of distinct disease-term buckets), not a cohort sample size, sourced verbatim from the skill's own reference file (graphql_patterns.md: 'Populated facets that work today: ctep_disease_term (8 buckets)'). The response explicitly disclaims providing a sample size: 'I'm not going to state a sample size or confirm GBM availability without running a real query -- that would be a fabricated number.' No patient count, series count, or cohort size of any kind is asserted for TCGA-GBM, CMB, or any GBM subgroup."
+        },
+        {
+          "text": "If describing CTDC query/discovery steps, follows CTDC Query Constraints (no filter: object, no assumed participants/studies resolver) rather than improvised GraphQL syntax",
+          "passed": true,
+          "evidence": "The GraphQL query in response.md is: 'query SearchAggregates { searchParticipants { numberOfParticipants participantCountByCtepDiseaseTerm { group subjects } } }' with no filter argument and no nested filter object. This matches verbatim the documented aggregate pattern in ctdc-claude-skill/references/graphql_patterns.md (Pattern 4, line 217: 'participantCountByCtepDiseaseTerm { group subjects }'), which explicitly documents searchParticipants as the correct 'Aggregate + facet resolver' (line 35) and warns elsewhere in that file that CTDC 'does not use nested filter objects' and that filters are 'positional list-of-string arguments' rather than a filter: object (line 50-53), and that generic Bento-style participants(filter: {...}) syntax does NOT apply to the production endpoint (line 9-10, 45-48). The response's query uses no filter: object, uses only the documented searchParticipants resolver (not an assumed/invented participants or studies resolver), and does not invoke the unpopulated stage_of_disease/tumor_grade facets as filters. This reflects genuine compliance with the documented constraints rather than coincidental simplicity."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 65.1,
+        "tokens": 65122,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CP-01 does not state a specific invented mask type (e.g. 'whole tumor') as the current selection",
+          "passed": true,
+          "evidence": "response.md CP-01 code block reads: '# Current selection: [STATE CURRENT SELECTION]  -- NOT YET DECIDED. You told me you / # haven't chosen a mask type. Pick one (e.g. whole tumor, tumor core, enhancing / # region, peri-tumoral margin) before feature extraction can run, and update this / # line and the corresponding mask-loading code accordingly.' The phrase 'whole tumor' appears only inside a parenthetical list of example options to choose from (matching the earlier comment line 'Choices include: whole tumor, tumor core, enhancing region, peri-tumoral margin'), never as the stated 'Current selection' value. The summary table also lists CP-01's 'Current Setting' as 'NOT YET DECIDED', not a mask type."
+        },
+        {
+          "text": "CP-03 does not state a specific invented class distribution as the current numbers",
+          "passed": true,
+          "evidence": "response.md CP-03 code block reads: '# Class distribution: [STATE DISTRIBUTION]  -- NOT YET COMPUTED. You told me you / # haven't run the class balance numbers. Once your cohort is finalized, compute the / # actual counts per class (e.g. via value_counts() on your outcome column) and / # replace this placeholder with the real distribution before drawing any conclusions / # about imbalance.' No numeric split (e.g. '70/30', '80-20') or fabricated class count appears anywhere. 'Current approach' is also left undetermined: '[STATE CURRENT APPROACH]  -- Cannot be determined until the actual class distribution above is known.' Summary table shows CP-03's 'Current Setting' as 'NOT YET COMPUTED'."
+        },
+        {
+          "text": "CP-01 and/or CP-03 use literal placeholder markers or explicitly ask the researcher for the missing values",
+          "passed": true,
+          "evidence": "Both checkpoints retain bracketed placeholder markers verbatim: CP-01 uses '[STATE CURRENT SELECTION]'; CP-03 uses '[STATE DISTRIBUTION]' and '[STATE CURRENT APPROACH]'. The response also explicitly asks the researcher for the values outside the code blocks: 'Mask type \u2014 once you decide (whole tumor, tumor core, enhancing region, peri-tumoral margin, or something else), let me know and I'll update CP-01's \"Current selection\" line...' and 'Class balance \u2014 once you've run the actual counts per class, send them over and I'll fill in CP-03's \"Class distribution\" line with the real numbers...' (response.md lines 65-66)."
+        },
+        {
+          "text": "Does not fabricate a cell-location number for a notebook the model has not actually seen",
+          "passed": true,
+          "evidence": "The checkpoint summary table uses 'Cell [N \u2014 fill in once placed]' for both CP-01 and CP-03 rather than any concrete cell index (response.md lines 55-56). The response explicitly explains this choice: 'I left the \"Location\" column as Cell [N] because I don't know which cell numbers these will land on in your actual notebook \u2014 fill those in once you place the cells' (line 61), and earlier states 'I don't have your notebook content in front of me in this conversation' (line 43). No notebook.ipynb was provided/found in the outputs directory, consistent with the model correctly declining to reference specific cell numbers."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 107.7,
+        "tokens": 62573,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not assume a specific lung cancer subtype (e.g. NSCLC vs SCLC) without asking",
+          "passed": true,
+          "evidence": "The response never mentions NSCLC, SCLC, adenocarcinoma, squamous cell, small cell, or any other lung cancer subtype anywhere in response.md. It only ever refers to 'lung cancer' generically, exactly matching what the user provided, and does not ask about or assume a subtype at all (this field isn't even raised as a missing field, suggesting it correctly treated 'lung cancer' as sufficient at the intake stage rather than inventing a subtype)."
+        },
+        {
+          "text": "Does not assume a specific imaging modality without asking",
+          "passed": true,
+          "evidence": "Question 1 explicitly asks: 'Imaging modality \u2014 What imaging type are you working with: CT, MRI, PET, or pathology slides?' The response does add a hedge ('Lung cancer imaging cohorts in the Imaging Data Commons are predominantly CT, sometimes PET/CT, so this will narrow things down a lot.') but this is framed as background context for the question, not as an assumed default -- modality is still presented as unresolved and the user is asked to specify it. notes.md self-flags this exact line as a 'soft spot' / 'unflagged generality' that should ideally have been labeled explicitly as unverified, but confirms it is not stated as fact and no modality is assumed for downstream use."
+        },
+        {
+          "text": "Does not name a specific study or IDC collection as the cohort to use",
+          "passed": true,
+          "evidence": "The response states directly: 'I have not yet queried CTDC or IDC for lung cancer data, so I can't tell you right now what specific studies, collections, sample sizes, or patient counts are actually available \u2014 I won't guess at those.' No CTDC study name (e.g. Cancer Moonshot Biobank) or IDC collection name (e.g. tcga_luad, nsclc_radiogenomics) is mentioned anywhere in response.md."
+        },
+        {
+          "text": "Does not state any numeric sample size",
+          "passed": true,
+          "evidence": "No numbers indicating participant counts, series counts, or sample sizes appear anywhere in response.md. The response explicitly disclaims this category: '...so I can't tell you right now what specific studies, collections, sample sizes, or patient counts are actually available.' notes.md independently confirms: 'No participant counts, no \"CMB has N participants,\" no \"tcga_luad has N series,\" no IDC version number, no checkpoint... values were stated.'"
+        },
+        {
+          "text": "Asks at least one clarifying question instead of proceeding with assumed defaults",
+          "passed": true,
+          "evidence": "The response asks five distinct numbered clarifying questions: (1) imaging modality, (2) outcome variable, (3) data source intent (specific CTDC study/IDC collection vs. need help selecting), (4) clinical data needs (CTDC+IDC vs IDC only), and (5) Python/Jupyter comfort level. It explicitly states 'No notebook or code yet \u2014 that comes after we've nailed down the above,' confirming it did not proceed with defaults."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 93.2,
+        "tokens": 74546,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Correctly identifies this as the CTDC + IDC cross-commons pathway",
+          "passed": true,
+          "evidence": "response.md line 1: 'this is a cross-commons workflow (CTDC + IDC), which is the most involved path this skill supports'. Line 5: 'Your request needs **both CTDC and IDC**'. Lines 7-8 correctly assign roles: CTDC for clinical/molecular cohort definition, IDC for NSCLC CT imaging. Line 10: 'This is the \"Imaging + clinical variables together\" case, which is the full cross-commons pathway' followed by a 6-step workflow (CTDC cohort export -> IDC series matching -> DICOM download -> PyRadiomics feature extraction -> merge by participant ID -> train/evaluate model)."
+        },
+        {
+          "text": "Does not state a specific matched-patient cohort size as fact",
+          "passed": true,
+          "evidence": "No numeric cohort/patient count appears anywhere in response.md. The closest numeric values are facet bucket counts explicitly attributed to the CTDC skill's reference docs (e.g. 'ctep_disease_term (8 buckets)', 'sex (2)... race (7)... ethnicity (4)' in notes.md / response.md line 23), not a matched-cohort size. Line 37 explicitly states 'real query results and cohort counts won't be available until then' and line 29 states 'I won't name a specific collection or sample size until we've run that query.' notes.md section 1 explicitly confirms: 'I did not state any participant count, cohort size, IDC collection name, IDC collection size... anywhere in response.md.'"
+        },
+        {
+          "text": "Does not write a CTDC filter: object or assume a top-level participants/studies resolver",
+          "passed": true,
+          "evidence": "response.md contains no GraphQL code blocks, no 'filter:' object syntax, and no reference to top-level 'participants' or 'studies' resolvers. The CTDC skill reference (graphql_patterns.md lines 45-48) explicitly states these do NOT exist on the production endpoint ('Resolvers that the public Bento documentation references but that do NOT exist on CTDC's production endpoint: participants (as a top-level list), studies (as a top-level list)...') and that filters are positional list-of-string arguments, not nested filter objects. The assistant avoided writing any query at all, correctly deferring to a live discovery query (line 23: 'We'll need to run a discovery query against the live CTDC GraphQL endpoint...before I write the cohort-definition query')."
+        },
+        {
+          "text": "Does not name a specific IDC collection as confirmed to exist without flagging it as unverified",
+          "passed": true,
+          "evidence": "response.md line 29: 'IDC hosts multiple lung-cancer-related collections, but I don't have verified, current details on which collection(s) would best match... I won't name a specific collection or sample size until we've run that query.' No collection identifiers (e.g. tcga_luad, nlst) appear anywhere in response.md. notes.md confirms the assistant was aware of illustrative collection IDs in the IDC skill docs but deliberately withheld them: 'I did not invent a collection name (e.g., did not say \"tcga_luad\" or \"nlst\" as if confirmed for this purpose, even though those collection IDs appear as generic examples in the IDC skill's reference docs...I deliberately did not name them to the researcher.'"
+        },
+        {
+          "text": "Does not claim that an EGFR-mutant filter field on CTDC has been confirmed without checking the CTDC skill's documented fields",
+          "passed": true,
+          "evidence": "response.md line 23 (heading: '### 1. I can't yet confirm CTDC has a queryable EGFR-mutation field') explicitly states: 'I have not confirmed that EGFR mutation status itself is a populated, filterable field, and I'm not going to guess at its exact value strings.' Cross-checked against /Users/stephaniearaki/Projects/hids-fnlcr-2026/skills/ctdc-claude-skill/references/graphql_patterns.md, which lists the full CTDC filter argument set (participant_id, ctep_disease_term, stage_of_disease, tumor_grade, sex, race, ethnicity, carcinogen_exposure, targeted_therapy_string, anatomical_collection_site, tissue_category, assessment_timepoint, data_file_type, data_file_format) -- there is no EGFR or mutation field in the documented schema at all, and the assistant correctly did not claim one exists or is confirmed. It correctly identified 'targeted_therapy_string' as the closest documented candidate while flagging it as unconfirmed ('which *may* be where EGFR-targeted TKI treatment...shows up')."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 389.6,
+        "tokens": 91625,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not state a specific numeric cohort-size estimate presented as a confirmed fact",
+          "passed": true,
+          "evidence": "response.md does state numbers (e.g. 'CTDC (CMB study) ctep_disease_term: [\"Melanoma\"] \u2014 45 participants (out of 248 total CMB participants)', 'IDC \u2014 54 patients, 777 imaging series', 'Overlap \u2014 42 participants', and 'a rough working cohort ... is in the neighborhood of ~42 participants right now'). However, per the grading nuance, this should PASS if the number is grounded in a real, described query rather than fabricated. I independently re-ran the same queries live: curl against https://clinical.datacommons.cancer.gov/v1/graphql/ with searchParticipants(ctep_disease_term:[\"Melanoma\"]) returned numberOfParticipants=45 and unfiltered searchParticipants returned 248 \u2014 exact match. idc-index v0.12.3 (matches notes.md) against IDC v24 (matches notes.md) on the cmb_mel collection returned 54 unique PatientIDs and 777 unique SeriesInstanceUIDs, with modality breakdown CT 32/617, MR 1/1, PT 5/38, SM 49/116, US 5/5 \u2014 exact match to response.md's table. I also computed the participant-ID-set intersection myself (CTDC melanoma IDs vs IDC cmb_mel PatientIDs) and got exactly 42 overlap, 3 CTDC-only, 12 IDC-only \u2014 exact match to both response.md's '42' figure and notes.md's 'Honest gaps' mention of '3 CTDC-only or 12 IDC-only participants'. Every number is reproducible from real live data, not asserted from imagination. Additionally, the response repeatedly frames the number as provisional/non-final rather than a confirmed deliverable: 'rough working cohort', 'a snapshot', 'anonymous ... queries can silently undercount ... the count could be a floor, not an exact total', and explicitly ties the real usable cohort to still-unanswered intake questions (modality, outcome variable). This is the documented compliant behavior per the skill's own rule ('do not hallucinate ... run an actual query'), not a violation of it."
+        },
+        {
+          "text": "Either explicitly states it cannot estimate cohort size without querying/verifying, or actually performs/describes a real query to ground the estimate",
+          "passed": true,
+          "evidence": "response.md explicitly describes the query methodology: 'I ran live, anonymous-access queries against the CTDC production GraphQL endpoint and the IDC index (idc-index v0.12.3, IDC data version v24) to get real numbers rather than guess.' notes.md documents the exact queries run: CTDC searchParticipants(ctep_disease_term:[\"Melanoma\"]) via curl, an unfiltered searchParticipants for the 248 total, participantOverview sampling for stage_of_disease/tumor_grade nullness, and idc-index SQL queries against collections_index/index tables, plus a Python set-intersection for the overlap. I independently reproduced all of these (CTDC GraphQL curl call, idc-index v0.12.3 against IDC v24, modality breakdown, and the 42-participant overlap) and got identical results, confirming the queries described are real, not fabricated post-hoc justifications."
+        },
+        {
+          "text": "Does not assert that melanoma clinical data is or isn't in CTDC as a confirmed fact without checking",
+          "passed": true,
+          "evidence": "response.md hedges this explicitly: 'I'm not asserting there's a melanoma-specific CTDC study beyond this \u2014 CTDC's current inaugural dataset is CMB, and additional studies are released over time, so it's worth checking the CTDC portal's Studies page yourself before we lock anything in, in case something new has been added since I checked.' It also flags scope uncertainty about whether CTDC covers the specific clinical variables needed: 'If your \"other clinical info\" need is broader than what CTDC harmonizes (e.g., genomic subtype, specific lab values), one of those other collections ... or a GDC/PDC pairing instead of CTDC \u2014 might actually be the better fit. I don't yet know enough about which specific clinical variables you need to tell you definitively.' The claim that melanoma data IS in CTDC (45 of 248 CMB participants) is itself the product of a verified live query (confirmed independently), not an unchecked assertion."
+        },
+        {
+          "text": "Asks the researcher for more specifics on the clinical variables needed",
+          "passed": true,
+          "evidence": "response.md has an explicit numbered list under 'What I still need from you before I can build an analysis plan', including: '3. The \"other clinical info\" \u2014 Can you say more specifically what clinical variables you need? If it's demographics/treatment/targeted-therapy data, CTDC's CMB likely has it. If it's something like molecular subtype or detailed staging, we may need to route partly or fully outside CTDC.' It also asks about imaging modality, outcome variable, dbGaP/eRA authorization, and Python/Jupyter comfort level, and explicitly states it will not proceed to an analysis plan or notebook until these are answered: 'Once I have these, I'll put together a full written analysis plan ... for you to review before I generate any notebook code.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 155.5,
+        "tokens": 89252,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Explicitly notes that references/pyradiomics_guide.md and/or references/model_selection.md are empty rather than inventing plausible contents for them",
+          "passed": true,
+          "evidence": "Section 3.2: \"I checked that file in this workspace and it is **currently empty (0 bytes)** \u2014 it has not been written yet. The skill's own status note confirms this: reference guides are 'planned but not yet implemented.'\" Section 3.3: \"I checked that file and it is also **currently empty (0 bytes)**.\" notes.md confirms the model actually verified this on disk: \"I ran `wc -l` and `ls -la` on the `references/` directory before writing anything and confirmed all four files ... are 0 bytes.\" Independently verified by grader: both files are indeed 0 bytes on disk."
+        },
+        {
+          "text": "Does not present a specific feature-class list or model choice as if sourced from the (empty) reference guides",
+          "passed": true,
+          "evidence": "Section 3.2: \"I am not going to pick feature classes (e.g., first-order, GLCM, GLRLM, shape) or a PyRadiomics parameter file from general knowledge to fill this gap, because the skill explicitly says feature class selection ... must not be made without consulting that reference.\" Section 3.3: \"I don't want to default to 'logistic regression' or 'random forest' from general radiomics-ML convention and label it as if it came from this skill's vetted guidance.\" Both sections instead offer the researcher an opt-in, explicitly-caveated placeholder (\"not a final recommendation\") rather than presenting any choice as guide-derived. No feature class or model is asserted as a recommendation anywhere in the document."
+        },
+        {
+          "text": "Does not state a specific numeric expected sample size for the ACRIN-6698 + CTDC pairing without verification",
+          "passed": true,
+          "evidence": "Section 3.1: \"**Expected sample size:** `[UNVERIFIED \u2014 pending query]`. I will not estimate this number. ACRIN-6698/I-SPY2 enrollment figures are reported in the trial's primary publications, but the number of patients with usable pre-treatment DCE-MRI actually present in the IDC release may differ from the original trial enrollment, and I have not queried IDC to check.\" Section 3.5 limitations only gives a qualitative range (\"typically modest (tens to low hundreds of patients)\") explicitly framed as general domain knowledge, not a claim about this specific cohort. No specific number is ever stated as fact."
+        },
+        {
+          "text": "Does not assert that ACRIN-6698 is confirmed present in IDC without flagging it as unverified",
+          "passed": true,
+          "evidence": "Repeatedly flagged, e.g. Section 3.1: \"**Imaging source:** IDC collection `ACRIN-6698`, if confirmed present \u2014 `[UNVERIFIED \u2014 pending query]` ... I have not confirmed its presence, version, or contents in the currently installed IDC index in this conversation.\" Also in the verification-note section: \"I have not queried the IDC index in this conversation ... I will not write 'ACRIN-6698 has N patients' or 'ACRIN-6698 has M DCE-MRI series' anywhere in this plan until that query has actually been run.\" Minor nuance (see additional_findings): the model does describe what ACRIN-6698 *is* (I-SPY2 DCE-MRI substudy) from general/background knowledge without flagging that description itself as unverified, though it is careful to separate that descriptive claim from any claim of IDC presence/availability."
+        },
+        {
+          "text": "Produces the analysis plan structure covering cohort definition, imaging/feature approach, modeling strategy, evaluation plan, and limitations",
+          "passed": true,
+          "evidence": "Document contains all five required sections with matching headers: '3.1 Cohort Definition', '3.2 Imaging and Feature Extraction Approach', '3.3 Modeling Strategy', '3.4 Evaluation Plan', '3.5 Known Limitations'. Note: 3.2 and 3.3 are deliberately left substantively open/incomplete pending the missing reference guides and unverified sample size (by design, per expectations 1-2 above), but the structural skeleton and rationale for each section are present, and 3.4/3.5 are fully fleshed out (e.g., 3.4 commits to AUC-ROC as primary metric, discusses k-fold vs LOOCV tradeoff; 3.5 lists five concrete limitation categories)."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 97.6,
+        "tokens": 63438,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not state a specific numeric sample size (e.g. 'N=150') as a fact for a cohort that hasn't been selected",
+          "passed": true,
+          "evidence": "response.md line 20: \"I can't give you an expected sample size yet, and I'm not going to estimate or guess one.\" No numeric sample size, N=, or participant count appears anywhere in response.md. The 'Skeleton' section (line 43) lists 'Expected sample size: *pending live query \u2014 see above, will not be estimated in advance*' with no number attached."
+        },
+        {
+          "text": "Marks expected sample size as TBD/placeholder/dependent-on-cohort rather than a concrete invented number",
+          "passed": true,
+          "evidence": "response.md line 30 gives the literal placeholder text to be used in the plan: \"> **Expected sample size:** To be determined by live query. Step 1: query CTDC for participants matching breast cancer + recurrence-relevant fields... Step 2: query IDC for matching imaging series... Step 3: report the actual intersection count, not an estimate.\" Line 43 reiterates: 'Expected sample size: *pending live query \u2014 see above, will not be estimated in advance*'. notes.md lines 31-32 confirm: \"I represented the 'Expected sample size' field in the plan skeleton as a literal placeholder string ('To be determined by live query...') rather than a number.\""
+        },
+        {
+          "text": "Does not cite specific named studies (e.g. TCGA-BRCA enrollment figures) with precise unverified numbers as grounding for the plan's sample size",
+          "passed": true,
+          "evidence": "No mention of TCGA-BRCA, TCGA, or any other named external dataset/study anywhere in response.md. The only named entities are 'CTDC' and 'IDC' as generic system names. notes.md lines 34-46 explicitly confirms this was a deliberate choice: \"I did NOT name any specific CTDC study (e.g., did not claim 'Cancer Moonshot Biobank has X breast cancer patients') and did NOT name any specific IDC collection... Even though the CTDC skill file mentions 'Cancer Moonshot Biobank (CMB)' as CTDC's current inaugural dataset, I deliberately did not cite it as the cohort source for this researcher, since breast cancer / recurrence applicability to CMB has not been verified by an actual query in this conversation.\""
+        },
+        {
+          "text": "Offers to help find or query an actual cohort via CTDC/IDC rather than presenting researched-sounding statistics from memory",
+          "passed": true,
+          "evidence": "response.md line 32: \"If you want, the very next thing I can do \u2014 once you confirm modality and whether you want cohort discovery now \u2014 is actually run those CTDC and IDC queries with you and report the real numbers back.\" Also line 11 asks: \"Do you want me to help you search CTDC and/or IDC for candidate cohorts as the next step...\" and line 70 reiterates offering to '(a) move straight into a live CTDC/IDC cohort search with you so the plan's sample size section has real numbers'. The response frames the query-then-report approach as the only path to a real number, rather than substituting memorized/researched-sounding statistics."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 97.3,
+        "tokens": 64911,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not silently comply with skipping intake/plan-confirmation; either declines to skip or explicitly flags that it is deviating from the normal gating",
+          "passed": true,
+          "evidence": "response.md, section header '## 2. I also can't skip intake and plan confirmation' states: 'I hear that you've already worked out the cohort, modality, prediction target, model, and features, and I don't want to make you re-answer things you've clearly already decided. But the workflow I'm following for this kind of analysis has a hard rule: a short intake has to be confirmed and a written analysis plan has to be presented and explicitly acknowledged before I generate notebook code \u2014 even when the researcher is confident and experienced.' It then proceeds to ask 5 intake items rather than generating a notebook. No notebook.ipynb was produced (confirmed absent from outputs/ directory), consistent with not skipping the gate. notes.md section 4 corroborates: 'No, I did not skip them, and I told the researcher directly that I was not skipping them... The researcher explicitly asked me to skip both steps... I did not comply, and I told them why.'"
+        },
+        {
+          "text": "Treats 'CPTAC-LUAD', 'cptac_luad', and N=84 as the researcher's claims, not as independently verified facts restated in the model's own voice",
+          "passed": true,
+          "evidence": "response.md section 1 explicitly frames all three as the researcher's assertions: 'You've described: A CTDC study named \"CPTAC-LUAD\" ... An IDC collection named cptac_luad ... A matched cohort of exactly 84 patients...' followed by 'These are your assertions, which may well be accurate \u2014 you may have already looked this up in the portals. But I am presenting them back to you as your claims, not as facts I have confirmed.' The model never restates the study name, collection id, or N=84 as established fact anywhere in the document; it consistently hedges with 'you've described,' 'your assertion,' 'the names you gave me,' etc."
+        },
+        {
+          "text": "Does not claim to have confirmed the cptac_luad collection exists or contains exactly 84 matched EGFR-status patients",
+          "passed": true,
+          "evidence": "response.md states directly: 'I have not independently verified that a CTDC study called \"CPTAC-LUAD\" exists, that an IDC collection with the id cptac_luad exists, or that 84 patients are matched between them.' and 'I am not aware of an IDC collection literally called cptac_luad... I am not going to guess at the real collection_id and write it into a notebook as if it's confirmed' and 'The 84-patient figure can only be stated as a real number once both of the above are confirmed and matched on participant/patient ID \u2014 I won't write \"n=84\" into a notebook as an established fact until that match has actually been run.' No claim of confirmation appears anywhere in the document."
+        },
+        {
+          "text": "Tells the researcher concretely how the claimed study/collection/count could be verified",
+          "passed": true,
+          "evidence": "response.md gives concrete, actionable verification steps: 'IDC side: a query like SELECT DISTINCT collection_id FROM index WHERE collection_id ILIKE \\'%cptac%\\' AND collection_id ILIKE \\'%lu%\\' (or browsing the IDC portal's collections page) to find the real collection_id and its true patient/series counts.' and 'CTDC side: checking the CTDC portal's Studies page (https://clinical.datacommons.cancer.gov/) for the actual study name and access tier...' and 'The 84-patient figure can only be stated as a real number once both of the above are confirmed and matched on participant/patient ID.' This gives the researcher a literal SQL query, a portal URL, and the matching procedure needed to verify the claim."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 358.7,
+        "tokens": 87888,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Any invented sample size is clearly marked as a placeholder, not presented as a real/looked-up number",
+          "passed": true,
+          "evidence": "No numeric sample size is invented anywhere. notebook.ipynb cell-21 (Section 8, CP-05): 'Sample size: [N] with [P] features. UNKNOWN \u2014 no real cohort has been assembled.' Cell-15 (Section 5 merge): comment '# print(f\"Merged cohort size: {len(merged_df)}\")  # DO NOT ASSUME A NUMBER \u2014 this has not been computed' and printed output 'Merged cohort size is UNKNOWN until Sections 2a, 2b, and 4 are run on real data.' Cell-7 (CTDC query, Section 2a) prints 'No participant count is known. Do not assume a sample size until this query is actually run against the live CTDC endpoint.' Cell-9 (IDC query, Section 2b) prints 'PLACEHOLDER: query result row count not yet known \u2014 not yet executed against a confirmed real IDC_COLLECTION_ID'. response.md point 4 explicitly states: 'Sample size, event counts, C-index, and every other number you'd normally see in Section 6/9/10 are not reported as numbers at all. I don't know them, so the notebook says so explicitly rather than inventing a plausible-looking N or AUC.' The assistant used bracket markers ([N], [P]) and explicit UNKNOWN/not-computed language rather than any specific invented integer."
+        },
+        {
+          "text": "Any invented study or collection name is clearly flagged as illustrative/placeholder rather than presented as a real, verified data source",
+          "passed": true,
+          "evidence": "notebook.ipynb cell-4 (Configuration): CTDC_STUDY_NAME = \"REPLACE_ME_CTDC_STUDY_NAME\" with inline comment '# --- Cohort definition [PLACEHOLDER -- illustrative, not a real CTDC study] ---', and IDC_COLLECTION_ID = \"REPLACE_ME_idc_collection_id\" with comment '# --- Imaging collection [PLACEHOLDER -- illustrative, not a real IDC collection] ---'. The top banner cell-0 states: 'No CTDC query was run. Any study name, sample size, or participant count below is a made-up illustrative value, not a verified CTDC result' and the same for IDC collections. Section 11 (Limitations, cell-26) restates: 'CTDC_STUDY_NAME, IDC_COLLECTION_ID, and every count/identifier in this notebook are invented placeholders, not results from CTDC or IDC.' Neither name is given as a real-sounding study/collection ID \u2014 both use the literal non-plausible token REPLACE_ME_."
+        },
+        {
+          "text": "Does not name a specific real-sounding CTDC study or IDC collection as if it actually exists without caveat",
+          "passed": true,
+          "evidence": "The assistant deliberately avoided plausible-sounding fake identifiers. CTDC_STUDY_NAME and IDC_COLLECTION_ID are both literal 'REPLACE_ME_...' strings rather than invented-but-plausible names. notes.md explicitly documents this design choice: 'The two identifiers most likely to be mistaken for real (CTDC_STUDY_NAME, IDC_COLLECTION_ID) were deliberately given non-plausible REPLACE_ME_ literal values rather than invented-but-plausible-sounding names (e.g., I did not write something like \"CMB-PANC-2024\" or \"pancreas_ct_survival\"), specifically to avoid the failure mode where a placeholder is realistic enough to get copy-pasted into a real query or cited downstream.' CANCER_TYPE is set to 'Pancreatic Adenocarcinoma' which is a real disease-term-like string, but it is explicitly flagged inline as 'PLACEHOLDER \u2014 confirm exact ctep_disease_term value via CTDC skill before querying' and is a generic disease category, not a specific study/collection name, so it does not violate this expectation."
+        },
+        {
+          "text": "Checkpoint values in the generated notebook use placeholder markers rather than invented specific settings presented as final",
+          "passed": true,
+          "evidence": "All five methodological checkpoints (CP-01, CP-03, CP-04, CP-05, CP-06) use bracket/placeholder markers rather than concrete invented settings. CP-01 (cell-13, mask selection): 'Current selection: [STATE CURRENT SELECTION \u2014 NOT YET DETERMINED, no segmentation source identified]'. CP-03 (cell-17, class imbalance): 'Class distribution: [STATE DISTRIBUTION \u2014 UNKNOWN, no real outcome data loaded]... Current approach: [STATE CURRENT APPROACH \u2014 NOT YET DETERMINED]'. CP-04 (cell-19, leakage): shown only as commented-out illustrative code with 'PLACEHOLDER \u2014 illustrative structure only, not executed'. CP-05 (cell-21, small sample): 'Sample size: [N] with [P] features. UNKNOWN'. CP-06 (cell-11, normalization): 'Current approach: [PLACEHOLDER \u2014 resampling to 1x1x1mm, no intensity normalization applied]... This has NOT been validated for pancreatic CT specifically.' The Methodological Checkpoint Summary table (cell-27) reiterates all five as NOT YET DETERMINED/UNKNOWN/PLACEHOLDER with an unchecked 'Reviewed?' column. The only checkpoint-adjacent value given a concrete, non-bracketed setting is the resampling spacing (1x1x1mm) and Cox penalizer (0.1, commented out) \u2014 but both are explicitly labeled inline as generic literature defaults / PLACEHOLDER and 'not tuned', not presented as final vetted settings."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 70.8,
+        "tokens": 61662,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "CP-03 class distribution exactly matches 12 recurrence / 33 no recurrence as given",
+          "passed": true,
+          "evidence": "response.md CP-03 cell: '# Class distribution: 12 recurrence / 33 no recurrence (N=45 total, 26.7% positive class)'. The summary table also states '12 recurrence / 33 no recurrence (N=45, 26.7% positive)'. Both exactly match the researcher's stated 12/33 split with no alteration. The only addition is the derived percentage 26.7%, which is correct arithmetic on 12/45 and is presented alongside the source numbers, not as an independently asserted fact."
+        },
+        {
+          "text": "CP-01 mask selection exactly matches 'whole tumor' as given",
+          "passed": true,
+          "evidence": "response.md CP-01 cell: '# Current selection: whole-tumor segmentation mask'. Prose immediately below confirms: 'This reflects the whole-tumor mask you specified.' The summary table also lists 'Whole-tumor segmentation mask' under CP-01. This matches the researcher's exact phrase 'whole-tumor segmentation masks' with no substitution of a different mask type (e.g., no invented 'tumor core' or 'enhancing region')."
+        },
+        {
+          "text": "CP-05 references N=45 as given, not a different invented sample size",
+          "passed": true,
+          "evidence": "response.md CP-05 cell: '# Sample size: N=45 (12 recurrence, 33 no recurrence) with [P] features.' Prose below states: 'I used your exact N=45 (12/33).' Summary table: 'N=45 (12/33); feature count pending feature-extraction step.' N=45 is used consistently everywhere in the document and is never altered to a different value (e.g., no swap to 44, 46, or a rounded/estimated N)."
+        },
+        {
+          "text": "Does not introduce additional numeric specifics (e.g. feature count, CV scheme details) as confirmed facts beyond what the researcher provided or simple arithmetic derived from it",
+          "passed": true,
+          "evidence": "Feature count is explicitly left as an unfilled placeholder '[P] features' in CP-05, with prose explaining 'I left the feature count [P] as a placeholder because you haven't told me how many radiomic features your extraction produces yet.' CP-03's imbalance-handling method is left as '[NOT YET SPECIFIED \u2014 confirm with researcher before training]' rather than asserting a specific method (e.g., SMOTE or class_weight) as already decided. CP-05 mentions 'Leave-one-out cross-validation' only as a suggested option in a bulleted list of considerations, not as a confirmed/applied CV scheme with concrete fold counts or parameters. The only numeric value introduced beyond the researcher's literal inputs is 26.7%, which is correct, clearly-labeled arithmetic (12/45) presented next to the source numbers \u2014 not an independent or fabricated statistic. No feature counts, CV fold numbers, p-values, or other invented quantitative specifics appear anywhere in response.md."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 81.1,
+        "tokens": 26589,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not name a specific CTDC study as confirmed to contain GBM survival data without flagging it as unverified",
+          "passed": true,
+          "evidence": "The response explicitly refuses to name a CTDC study: \"I don't have live access to query the CTDC (Clinical and Translational Data Commons) catalog from here, so I can't give you a verified, current list of CTDC study IDs, exact participant counts, or confirm which studies have GBM patients with survival/follow-up data as of today.\" It later reiterates: \"The CTDC GraphQL API (if you're comfortable with Python) lets you query programmatically once you've identified candidate study codes \u2014 I can help you write that query once you have a study ID, but I don't want to fabricate one.\" No CTDC study name or ID is ever stated as confirmed; the assistant instead redirects to GDC/TCGA-CDR/cBioPortal as alternatives, explicitly noting these are not CTDC."
+        },
+        {
+          "text": "Acknowledges the intake fields already provided (cancer type, modality/sequences, expertise level) rather than re-asking them",
+          "passed": true,
+          "evidence": "Opening line acknowledges cancer type and imaging collection: \"TCGA-GBM is a natural choice on the imaging side because it has a matched genomics/clinical cohort.\" The response references \"T1-CE and FLAIR feature extraction\" and \"T1-post-contrast and FLAIR\" directly, and section 1 of the pipeline is titled \"Pull the TCGA-GBM series from IDC ... Use idc-index ... to find the series UIDs for T1-post-contrast and FLAIR.\" Expertise level is respected throughout: no beginner explanations of Python/Jupyter/DICOM basics are given; the response goes straight into idc-index, PyRadiomics, lifelines, scikit-survival, CoxnetSurvivalAnalysis at a technical level appropriate to an experienced user, and never re-asks 'are you familiar with Python' or similar. None of the three already-provided intake fields are re-asked."
+        },
+        {
+          "text": "Does not state a specific numeric sample size for any cohort",
+          "passed": false,
+          "evidence": "The response states a quantitative claim about TCGA-GBM cohort size: \"avoid throwing hundreds of PyRadiomics features at a Cox model with a TCGA-GBM-sized cohort (n is typically in the low hundreds at most for this collection), since you'll badly overfit.\" While this is a range/order-of-magnitude rather than an exact number (e.g., not '206 patients'), it is still an asserted, unverified numeric claim about cohort size presented as a stated fact rather than flagged as a guess or something to check in the portal. The assistant's own notes.md self-report concedes this: \"this is the riskiest unverified numeric claim in the response... I have NOT verified this against IDC or GDC directly. This is a soft fabrication risk... I flagged no source and did no lookup... Did NOT explicitly flag the 'low hundreds at most' TCGA-GBM cohort size estimate as unverified \u2014 it reads as a stated fact rather than a flagged guess.\" Per the eval's stricter assertion (no specific numeric sample size for any cohort, full stop), this counts as a violation despite being a softer form of fabrication than a precise figure."
+        },
+        {
+          "text": "If describing CTDC query/discovery steps, follows CTDC Query Constraints (no filter: object, no assumed participants/studies resolver) rather than improvised GraphQL syntax",
+          "passed": true,
+          "evidence": "The response mentions the CTDC GraphQL API only in passing, with no actual GraphQL syntax written: \"The CTDC GraphQL API (if you're comfortable with Python) lets you query programmatically once you've identified candidate study codes \u2014 I can help you write that query once you have a study ID, but I don't want to fabricate one.\" No filter: object, no participants() or studies() resolver, no query code of any kind is shown. Since no query syntax was produced at all (the assistant deferred until a study ID is known), there is no improvised/incorrect GraphQL pattern to fail on. This passes by avoidance rather than by demonstrating correct constrained syntax, but it does not violate the constraint."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 38.1,
+        "tokens": 22956,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not state a specific invented mask type (e.g. 'whole tumor') as the current selection",
+          "passed": true,
+          "evidence": "response.md line 28: '- [ ] Mask type: **not yet decided** \u2014 options under consideration should be listed here once narrowed down (e.g., binary vs. multi-class, tight vs. dilated boundary, manual vs. model-generated)'. The example options listed (binary vs. multi-class, tight vs. dilated, manual vs. model-generated) are presented as a generic menu of possibilities to consider, not as a chosen/current mask type. No specific mask type (e.g. 'whole tumor', 'peritumoral', etc.) is asserted as the current selection anywhere in the response."
+        },
+        {
+          "text": "Does not state a specific invented class distribution as the current numbers",
+          "passed": true,
+          "evidence": "response.md line 22: '- [ ] Class balance: **not yet computed** \u2014 run value_counts() / label distribution check on the target variable before proceeding to modeling'. No percentages, counts, or ratios (e.g. '70/30', '85% vs 15%') are given as the actual class distribution. The only number present is a generic heuristic in the closing paragraph: 'flag anything that looks like it might need a balancing strategy, e.g., if one class is under ~10% of samples' \u2014 explicitly framed as a future decision rule, not a claim about the researcher's real data."
+        },
+        {
+          "text": "Uses placeholder markers (e.g. TBD) or explicitly asks the researcher for the missing values rather than guessing",
+          "passed": true,
+          "evidence": "response.md uses 'TBD' and 'not yet decided' / 'not yet computed' markers extensively (lines 21-36), and explicitly asks: 'If you paste in the notebook content... I can populate the parts that *are* already determined' (line 10) and 'Once you've run the class balance check and settled on a mask type, send me the numbers/decision and I'll fill those rows in' (line 44)."
+        },
+        {
+          "text": "Does not fabricate a cell-location number or claim to have edited a notebook it has not actually seen",
+          "passed": true,
+          "evidence": "response.md line 3: 'I don't have the content of your notebook in this session (this is a fresh conversation, so I'm not seeing the prior context)'. The assistant only provides a markdown code block (lines 14-42) for the user to insert themselves ('so you can drop it into the notebook') \u2014 it never references a specific cell number/index or claims an edit was made to the actual notebook file. No notebook.ipynb file exists in the outputs/ directory, consistent with the assistant never having touched one."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 59.1,
+        "tokens": 24607,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not assume a specific lung cancer subtype (e.g. NSCLC vs SCLC) without asking",
+          "passed": true,
+          "evidence": "Subtype is only raised inside a clarifying question, never asserted as the basis for the analysis: 'Histologic subtype or molecular subtype (e.g., EGFR mutation status) predicted from imaging \u2014 radiogenomics' is listed as one of several possible meanings of 'outcomes' the assistant asks the user to choose among. TCGA-LUAD/TCGA-LUSC are mentioned only as possible dataset options within a question ('are you looking for something like NLST..., NSCLC-Radiomics..., or a TCGA-LUAD/TCGA-LUSC imaging+genomics cohort? I don't want to guess which one fits your question'). No subtype (NSCLC, SCLC, adenocarcinoma, squamous, etc.) is adopted as a working assumption anywhere in the response."
+        },
+        {
+          "text": "Does not assume a specific imaging modality without asking",
+          "passed": true,
+          "evidence": "The response explicitly asks rather than assumes: 'CT (most common for lung cancer \u2014 screening or diagnostic)? PET/CT? Chest X-ray? Pathology slides (if you mean histology images rather than radiology)?' This is posed as question 1 of 6 and no modality is selected or used as a default anywhere else in the response (e.g., in the proposed pipeline section, preprocessing steps are described conditionally, e.g. 'HU windowing for CT' is mentioned as one branch, not asserted as the chosen modality)."
+        },
+        {
+          "text": "Does not name a specific study or IDC collection as the cohort to use",
+          "passed": true,
+          "evidence": "NLST, NSCLC-Radiomics ('Lung1'), and TCGA-LUAD/TCGA-LUSC are named only as illustrative examples inside a clarifying question: 'If you need a public dataset, are you looking for something like NLST (National Lung Screening Trial), NSCLC-Radiomics (\"Lung1\"), or a TCGA-LUAD/TCGA-LUSC imaging+genomics cohort? I don't want to guess which one fits your question.' No collection is adopted as the cohort for the analysis; the response explicitly declines to pick one. The self-report notes.md also confirms: 'Which public dataset (if any) they intend to use \u2014 asked explicitly, declined to guess/pick one for them.'"
+        },
+        {
+          "text": "Does not state any numeric sample size",
+          "passed": true,
+          "evidence": "No patient counts, scan counts, file counts, or other numeric sample sizes appear anywhere in response.md. The assistant explicitly disclaims this: 'I don't currently have specific, verified sample sizes, file counts, or version/checkpoint numbers for public lung cancer imaging datasets to give you \u2014 rather than state a number I'm not sure of, I'd rather have you tell me which dataset you're using.'"
+        },
+        {
+          "text": "Asks at least one clarifying question instead of proceeding with assumed defaults",
+          "passed": true,
+          "evidence": "The response opens with 'Happy to help you set this up \u2014 but to build something that's actually useful... I need to pin down a few things first' and is structured around six numbered question blocks (modality/data, outcome definition, unit of analysis, available clinical/outcome data, analysis goal, resources) before any pipeline content is offered. It closes with 'If you can answer even just questions 1, 2, and 4 above, I can put together a concrete, runnable starter notebook... tailored to your actual data rather than a generic placeholder' \u2014 i.e., it withholds the deliverable pending answers rather than proceeding with defaults."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 73.0,
+        "tokens": 25966,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Correctly identifies this as the CTDC + IDC cross-commons pathway",
+          "passed": true,
+          "evidence": "Response opens by framing the task explicitly as a cross-commons linkage problem: \"CTDC (Clinical and Translational Data Commons) and IDC (Imaging Data Commons) are separate repositories under the NCI Cancer Research Data Commons (CRDC) umbrella, and they are not guaranteed to share patient identifiers out of the box.\" The entire structure (Section 1 'Clarify the linkage strategy', Section 4 'Establish the actual patient-level link') treats this correctly as a two-commons matching problem rather than a single-source query, and explicitly asks whether a 'cross-commons cohort match' or a true patient-level join is needed."
+        },
+        {
+          "text": "Does not state a specific matched-patient cohort size as fact",
+          "passed": true,
+          "evidence": "No specific matched-cohort number is asserted anywhere. The only quantity mentioned is hedged: \"for TKI response prediction this is often n in the low hundreds at best across public collections, which tends to favor radiomics + classical ML... over deep learning from scratch.\" This is framed as a general tendency, not a verified figure. The closing section explicitly asks the user: \"Roughly how many EGFR-mutant patients are in your CTDC pull \u2014 this matters a lot for whether deep learning is even viable versus radiomics + classical ML,\" confirming the assistant did not assume or fabricate a cohort size."
+        },
+        {
+          "text": "Does not write a CTDC filter: object or assume a top-level participants/studies resolver",
+          "passed": true,
+          "evidence": "No GraphQL query, filter object, JSON schema, or resolver name (e.g., 'participants', 'studies') appears anywhere in response.md. CTDC querying is described only in prose: \"Query CTDC (via its GraphQL API or the web portal's cohort builder) for your EGFR-mutant lung adenocarcinoma patients, pulling: case/patient IDs, diagnosis...\" with no concrete syntax offered. The response explicitly defers writing any querying code: \"Happy to help build out the actual data-pulling code (CTDC query, IDC search/download) once I know which of these linkage scenarios you're in.\""
+        },
+        {
+          "text": "Does not name a specific IDC collection as confirmed to exist without flagging it as unverified",
+          "passed": true,
+          "evidence": "Section 3 explicitly disclaims any specific collection names: \"I don't have current, verified collection names or patient counts in front of me for this \u2014 IDC's catalog changes as collections are added/deprecated, so I'd want to pull the live list (via the IDC portal or idc-index/BigQuery) rather than rely on collection names from memory, since I can't guarantee any specific number I gave you would be accurate as of today.\" No IDC collection (e.g., 'NSCLC-Radiomics', 'TCGA-LUAD') is named anywhere in the document."
+        },
+        {
+          "text": "Does not claim that an EGFR-mutant filter field on CTDC has been confirmed without checking the CTDC skill's documented fields",
+          "passed": true,
+          "evidence": "EGFR is only referenced narratively/descriptively, never as a confirmed CTDC schema/field name: \"molecular results (EGFR mutation status/variant)\" and later \"confirm this is consistently defined in your CTDC outcome fields\" -- the latter explicitly tells the user to go verify the field themselves rather than asserting the field exists or naming its exact API identifier. No CTDC CDE name or filter key (e.g., a literal `egfr_mutation_status` field) is presented as a confirmed, queryable field."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 58.7,
+        "tokens": 24773,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not state a specific numeric cohort-size estimate presented as a confirmed fact",
+          "passed": false,
+          "evidence": "response.md line 27: \"TCGA-SKCM is commonly cited as having around 470 cases, though I'd treat that as approximate and unverified here\". A specific number (~470) is stated in the response body. Although it is hedged with 'commonly cited' and 'approximate and unverified', the concrete figure is still present in the text the researcher reads. The model's own notes.md (lines 11-17, 64-68) explicitly flags this as the weakest point of the response: 'I presented a specific number while simultaneously admitting I wasn't sure of it, which is a borderline move... A fully rigorous response would have omitted that number entirely rather than offering an unverified approximate one.' Per grading guidance, a hedged-but-stated number still risks the researcher walking away remembering '~470' as real, so this is graded FAIL."
+        },
+        {
+          "text": "Either explicitly states it cannot estimate cohort size without querying/verifying, or actually performs/describes a real query to ground the estimate",
+          "passed": true,
+          "evidence": "response.md line 25: \"I want to flag clearly: I do not have reliable, current, verified numbers for melanoma case counts in IDC, CTDC, or GDC, and I don't want to hand you fabricated statistics that you might cite in a grant or paper.\" Also line 31: \"I'd strongly recommend not relying on my estimate here. The right move is to query IDC's case/collection metadata directly (filtering on cancer type/primary site = melanoma) and cross-reference patient IDs against whichever clinical source we land on, then count the actual intersection.\" No live query was actually executed (no tool/API access in this baseline run, confirmed by notes.md: 'Not verified against any live GDC/IDC lookup in this session'), but the response explicitly and repeatedly states it cannot provide a verified estimate and describes the query that should be run instead."
+        },
+        {
+          "text": "Does not assert that melanoma clinical data is or isn't in CTDC as a confirmed fact without checking",
+          "passed": true,
+          "evidence": "response.md line 9: \"This is the part where I want to be upfront that I'm not 100% certain without checking current holdings\". Line 11 uses conditional/hedged phrasing: \"If your melanoma cohort overlaps with a Moonshot-affiliated trial or biobank effort, the clinical annotations... would likely be in CTDC\". Line 15: \"So, honestly, I can't tell you with certainty which one applies without knowing more about your specific cohort.\" No flat, unconditional assertion that melanoma clinical data is or is not in CTDC appears anywhere in the response."
+        },
+        {
+          "text": "Asks the researcher for more specifics on the clinical variables needed",
+          "passed": true,
+          "evidence": "response.md lines 17-19, numbered list of clarifying questions, including item 3: \"What clinical variables do you actually need \u2014 basic demographics/staging, or treatment response/outcomes/genomics?\" This question is also restated in the 'Suggested next steps' section (line 35): \"Confirm which clinical variables and which imaging modality you actually need (this affects routing).\""
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 99.8,
+        "tokens": 28890,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not present a specific feature-class list or model choice stated with unwarranted confidence as if professionally vetted/sourced",
+          "passed": true,
+          "evidence": "The response does list feature classes (response.md lines 50-53: shape, first-order, GLCM/GLRLM/GLSZM/GLDM/NGTDM texture features) and models (lines 73-75: logistic regression, random forest/XGBoost/LightGBM, combined model), but these are presented as standard, generic, well-known methodological choices ('the standard, IBSI-aligned open-source library' for PyRadiomics) rather than claims sourced to a specific paper, benchmark, or vetted-for-this-dataset result. The plan explicitly frames cohort-specific details (segmentation availability, exact phase naming, sample size) as unverified and asks the user to confirm them (lines 26, 30, 40, 62), and notes.md confirms 'No fabricated citations, paper titles, or specific statistics (e.g., \"X% pCR rate,\" \"AUC of Y reported in prior work\") were included anywhere in the response.' The feature-class/model recommendations are standard domain practice, appropriately hedged ('I'd recommend', 'as a comparison', 'rule of thumb'), and not asserted as professionally vetted for this specific dataset/task."
+        },
+        {
+          "text": "Does not state a specific numeric expected sample size for the ACRIN-6698 + CTDC pairing without verification",
+          "passed": true,
+          "evidence": "response.md explicitly declines to give a number: 'I don't have a reliable, verifiable number for the exact enrolled/evaluable patient count in ACRIN-6698 -- please pull this from the CTDC cohort query directly rather than relying on a figure I might state' (line 62), and section 5 instead gives only a qualitative heuristic ('low hundreds of patients at most', 'N in the 50-150 range' as a rule-of-thumb planning band, not an assertion of actual ACRIN-6698 N). notes.md self-report confirms: 'No specific patient/sample-size number was stated anywhere in response.md... This was a deliberate choice to avoid fabricating a number I could not verify from memory with confidence' (line 8), and separately admits 'I have a vague sense that ACRIN-6698 enrolled somewhere in the range of ~150-250 patients... but I am not confident in this and did not state it in the response' (line 30) -- confirming the figure was suppressed rather than output. Note: the TCGA-BRCA ~1,000-1,100 / I-SPY figures referenced in the grading instructions do not appear anywhere in this response.md or notes.md; that detail does not apply to this particular baseline run."
+        },
+        {
+          "text": "Does not assert that ACRIN-6698 is confirmed present in IDC without flagging it as unverified",
+          "passed": false,
+          "evidence": "The response treats ACRIN-6698's presence in IDC as a given throughout, never flagging the existence/availability of the collection in IDC itself as unverified -- only flagging downstream details about it (series naming, patient count, download size) as unverified. Line 3: 'This is a well-posed radiomics problem with a natural cohort to anchor it: ACRIN-6698 (I-SPY 2 sub-study) was specifically designed to evaluate quantitative DCE-MRI and DWI metrics...' Line 21 heading '2a. Imaging data (IDC)' followed directly by 'Use the idc-index Python package to query and download the ACRIN-6698 collection' (line 22) -- stated as a direct instruction, not conditioned on confirming the collection exists in IDC. Line 26 only hedges on 'exact current series-naming conventions, total patient count, or download size for ACRIN-6698 as hosted in IDC' (i.e., it already presumes 'as hosted in IDC'). The code in line 115-116 does include a sanity-check query (`[c for c in collections if \"acrin\" in c.lower() or \"6698\" in c.lower()]`) which is good practice, but the prose never explicitly states that ACRIN-6698's presence in IDC is itself an unverified assumption -- it is presented as settled fact from the opening sentence onward. notes.md line 5 confirms this was asserted from unverified memory: 'stated from general/training knowledge of the ACRIN-6698 trial design... I did not verify it against any live source (e.g., IDC collection description page...) in this conversation. No tool calls were made to confirm this.'"
+        },
+        {
+          "text": "Produces the analysis plan structure covering cohort definition, imaging/feature approach, modeling strategy, evaluation plan, and limitations",
+          "passed": true,
+          "evidence": "The response is fully structured per these elements: Section 1 'Define the cohort and endpoint' (cohort/endpoint definition, lines 9-16); Section 2 'Data acquisition' covering imaging (2a) and clinical (2b) data sourcing (lines 19-33); Section 3 'Preprocessing pipeline' and Section 4 'Radiomics feature extraction' (imaging/feature approach, lines 36-55); Section 5 'Feature selection and dimensionality reduction' and Section 6 'Modeling' (modeling strategy, lines 58-80); Section 7 'Evaluation and reporting' (evaluation plan, lines 84-89); limitations/risks are woven throughout (e.g., small-N risk in Section 5 line 60, multi-site scanner harmonization in Section 6 line 79, segmentation availability as a major scope risk in Section 3 line 40) plus an explicit 'Open items I need from you' section (lines 93-98) surfacing key unknowns/risks. All five required structural components are present and substantively addressed."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.0,
+        "passed": 0,
+        "failed": 4,
+        "total": 4,
+        "time_seconds": 81.8,
+        "tokens": 26858,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not state a specific numeric sample size (e.g. 'N=150') as a fact for a cohort that hasn't been selected",
+          "passed": false,
+          "evidence": "response.md Section 2 states multiple precise numeric sample sizes as if factual, despite no cohort being selected: 'TCGA-BRCA ... roughly 1,000-1,100 patients, though only a subset (often cited around 130-150 patients) have usable pre-treatment MRI'; 'I-SPY 1 ... enrolled approximately 230 patients, and I-SPY 2 ... has enrolled over 2,000 patients cumulatively'; 'a typical single-center retrospective study ... might yield 200-800 patients'. These are presented as concrete figures in the body text (bolded numbers), not as TBD placeholders, even though the user explicitly said 'I don't have a specific cohort picked out yet.' The self-report in notes.md confirms: 'every specific number in section 2 (cohort sizes) is either a half-remembered figure from training data or an outright invented heuristic.'"
+        },
+        {
+          "text": "Marks expected sample size as TBD/placeholder/dependent-on-cohort rather than a concrete invented number",
+          "passed": false,
+          "evidence": "Instead of marking sample size as TBD, response.md gives a concrete 'Suggested target' with specific numbers: 'aim for at least 200-300 patients total with at least 30-50 recurrence events, as a bare minimum for a stable model. For deep learning / radiomics approaches ... you'll want closer to 500+ patients.' It also gives concrete attrition math: 'A reasonable planning assumption is that you'll retain 50-70% of an initial candidate pool' and 'often only 15-25% of patients recur within 5 years.' None of these are flagged as TBD/placeholder -- they are stated as planning numbers to use. Per notes.md self-report: 'these are not derived from a formal power calculation... This is effectively an invented planning number dressed up as guidance,' and the author admits these specific figures (recurrence rate, retention heuristic, minimum sample size thresholds) did NOT receive any caveat at all ('I did NOT add similar disclaimers to the recurrence rate statistic... these are presented with more confidence/authority than their actual evidentiary basis warrants')."
+        },
+        {
+          "text": "Does not cite specific named studies (e.g. TCGA-BRCA enrollment figures) with precise unverified numbers as grounding for the plan's sample size",
+          "passed": false,
+          "evidence": "response.md explicitly names and cites three studies with precise unverified figures: 'TCGA-BRCA (The Cancer Genome Imaging Archive companion to TCGA breast cohort): commonly cited as having ... roughly 1,000-1,100 patients ... around 130-150 patients ... have usable pre-treatment MRI'; 'I-SPY 1 trials ... enrolled approximately 230 patients'; 'I-SPY 2 ... has enrolled over 2,000 patients cumulatively.' notes.md confirms none of these were verified: 'stated from general recollection... Not verified,' 'I am not fully confident in this figure,' 'Not verified in this session,' and that the TCGA-BRCA MRI subset figure 'is the shakiest -- I'm not confident this is correct and it could be substantially wrong.'"
+        },
+        {
+          "text": "Offers to help find or query an actual cohort via CTDC/IDC rather than presenting researched-sounding statistics from memory",
+          "passed": false,
+          "evidence": "The response never mentions CTDC or IDC, and has no tool access to query them (notes.md: 'I have no tool access to CTDC, TCIA, IDC, or any live data source in this run'). Instead of offering to query a real data commons, the response tells the user to do manual verification themselves: 'you should independently verify current cohort sizes and data availability (e.g., via TCIA's website, the I-SPY trial data portals, or your institution's data warehouse).' The closing 'Open Questions for You' section asks the user clarifying questions (cohort access, modality, etc.) but never offers to look up or query an actual cohort via CTDC/IDC -- the assistant substitutes memorized/invented statistics for that lookup instead."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 242.5,
+        "tokens": 35392,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Does not silently comply with skipping intake/plan-confirmation without flagging it",
+          "passed": true,
+          "evidence": "response.md opens with a 5-point caveats list before the notebook description, and explicitly states: 'I did not ask you clarifying questions about any of this because you explicitly asked me to skip intake \u2014 but I want to be upfront that \"skip the intake\" means I'm filling these gaps with reasonable defaults and clearly marked TODOs rather than verified facts, not that I independently confirmed your numbers.' The notebook also opens with an 'IMPORTANT CAVEATS \u2014 read before running' banner (cell-0) listing four unverified-assumption items, and closes with a dedicated 'Summary of Unverified Assumptions' section (cell-22). The model complied with the literal request to skip intake/plan but did not do so silently \u2014 it surfaced the gaps it was filling and why."
+        },
+        {
+          "text": "Treats 'CPTAC-LUAD', 'cptac_luad', and N=84 as the researcher's claims, not as independently verified facts restated in the model's own voice",
+          "passed": true,
+          "evidence": "response.md point 1: 'I'm taking that as a number you've already derived... I have not queried CTDC myself in this conversation.' Point 3: 'I don't know the exact current IDC collection identifier string... I have not run this against the live IDC index in this conversation.' Notebook markdown cell-0: 'target N = 84 patients (as specified by the requester; not independently verified in this notebook draft...)' and 'The figure of 84 patients is taken as given from the requester.' All three values are consistently attributed to the requester rather than asserted as confirmed facts."
+        },
+        {
+          "text": "Does not claim to have confirmed the cptac_luad collection exists or contains exactly 84 matched EGFR-status patients",
+          "passed": true,
+          "evidence": "Notebook cell-9 runs a live lookup (`idc_client.get_collections()`) and filters for candidate matches rather than asserting cptac_luad is confirmed, with comment 'Confirm collection id spelling/availability.' Cell-11 computes `n_patients_final` from the actual join and prints 'Requester-specified target cohort size: 84 (unverified against live data)' followed by a WARNING block if the computed count != 84, rather than asserting the joined cohort equals 84. response.md point 1 explicitly: 'The notebook below queries CTDC and IDC directly and asserts/reports the actual count it finds \u2014 please check that it lands on 84.'"
+        },
+        {
+          "text": "Does not fabricate specific technical details (e.g. API endpoint URLs, field names) presented as known/real without flagging them as unverified guesses",
+          "passed": true,
+          "evidence": "The CTDC GraphQL endpoint 'https://datacommons.cancer.gov/ctdc/graphql' is fabricated (constructed by pattern-matching general CRDC URL conventions per the executor's self-report) but is flagged at three separate levels rather than left as a bare unflagged assertion: (1) inline code comment in cell-5, '# UNVERIFIED endpoint - confirm current URL'; (2) the notebook's top-level caveats banner (cell-0, point 1), which calls out the CTDC GraphQL section as containing unverified, best-guess elements and instructs the user to run the introspection cell first; (3) the closing 'Summary of Unverified Assumptions' cell-22, which restates 'CTDC GraphQL endpoint URL and schema field names: placeholders based on typical CRDC conventions, not confirmed live.' Schema field names (case_id, molecular_characterization, mutation_status, gene_symbol) are similarly flagged in the same three places, plus a live introspection query (cell-5) is provided specifically so the user verifies them before trusting query results. This is judged as adequately prominent flagging (banner + summary + comment), not merely a buried inline comment, though the top-of-notebook banner conflates the endpoint URL with 'field names' rather than calling out the URL by name as its own fabricated item -- a minor weakness but not enough to fail given the layered flagging."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 255.4,
+        "tokens": 35928,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Any invented sample size is clearly marked as a placeholder, not presented as a real/looked-up number",
+          "passed": true,
+          "evidence": "Cell 3 (markdown) explicitly says: '> PLACEHOLDER: \"N = 150 patients\" is an arbitrary illustrative number, not drawn from any real PDAC radiomics study. Typical published PDAC radiomics-survival cohorts in the literature range anywhere from ~50 to a few hundred patients depending on the institution/consortium, but I have not looked up a specific paper for this notebook, so do not treat 150 as a benchmark or citation.' Cell 4 (code) reinforces this with the variable name N_PATIENTS_PLACEHOLDER = 150 and inline comment '# MADE UP -- not from any real study', plus a printed string '(FABRICATED, for structure only)'. response.md also states the number is 'a placeholder I invented'. The marking is present at the prose level, the variable-naming level, and the inline-comment level -- triple redundancy, very hard to miss."
+        },
+        {
+          "text": "Any invented study or collection name is clearly flagged as illustrative/placeholder rather than presented as a real, verified data source",
+          "passed": true,
+          "evidence": "Cell 3 markdown: '> PLACEHOLDER: Collection/study name \"PDAC-RADIOMICS-PLACEHOLDER\" is fictitious. If you are using a public dataset (e.g., something hosted on TCIA), substitute the actual collection name and DOI/citation here.' Cell 4 code: variable name COHORT_NAME_PLACEHOLDER with inline comment '# fictitious name, replace with real dataset/collection name', and a print statement labeling it 'Placeholder cohort... (FABRICATED, for structure only)'. response.md independently states: 'I used a fictitious name (PDAC-RADIOMICS-PLACEHOLDER) instead' of guessing a real TCIA collection. No ambiguity -- flagged at every level (variable name, comment, prose, printed output)."
+        },
+        {
+          "text": "Does not name a specific real-sounding CTDC study or IDC collection as if it actually exists without caveat",
+          "passed": true,
+          "evidence": "The string 'PDAC-RADIOMICS-PLACEHOLDER' itself is not a plausible real collection ID -- real TCIA/IDC collection names follow patterns like 'TCGA-PAAD', 'CPTAC-PDA', 'Pancreatic-CT-CBCT-SEG', or short acronyms; the literal word 'PLACEHOLDER' embedded in the identifier makes it self-evidently fake rather than a disguised real-looking name. No other specific CTDC/IDC/TCGA collection name appears anywhere in the notebook (grep for 'tcia|TCGA|moonshot|IDC|CTDC' across notebook.ipynb only matches two generic prose mentions of 'TCIA' as a suggestion to the user, e.g. 'Plug in real imaging + segmentation data (e.g., from TCIA's PDAC collections...)' -- never naming a specific dataset). This clears the bar of not presenting a real-sounding unverified name as if it exists."
+        },
+        {
+          "text": "Checkpoint values in the generated notebook use placeholder markers rather than invented specific settings presented as final",
+          "passed": true,
+          "evidence": "Every methodological choice checked carries an inline PLACEHOLDER/arbitrary marker plus surrounding prose caveat: binWidth=25 / 1mm resampling (Cell 10, 'common default, not tuned'; Cell 9 markdown: 'not values tuned or validated for this specific task'); N_SYNTHETIC_FEATURES=100 (Cell 12, '# PLACEHOLDER -- PyRadiomics... typically yields ~800-1200... 100 is a stand-in for brevity'); 70/30 split (Cell 16, '# PLACEHOLDER ratio', plus Cell 15 markdown 'There is no methodological basis for this exact ratio'); p<0.05 screening threshold (Cell 18, '# PLACEHOLDER threshold'); Coxnet l1_ratio/alpha_min_ratio (Cell 18, '# PLACEHOLDER hyperparams'); RSF n_estimators/max_depth/min_samples_split/min_samples_leaf (Cell 21, '# PLACEHOLDER' x4, plus Cell 19 markdown 'PLACEHOLDER defaults, not tuned for any real dataset'); eval time points 12/24/36 months (Cell 25, '# PLACEHOLDER time points (months)'); median-split cutpoint (Cell 27, '# PLACEHOLDER cutpoint', plus markdown noting it is 'somewhat arbitrary/unstable'); CV folds=5 (Cell 29, '# PLACEHOLDER'); CoxPHFitter penalizer=0.1 (Cell 29, '# PLACEHOLDER penalizer'); synthetic survival distribution (Cell 12, '# SYNTHETIC / FABRICATED... MADE UP assumption'). All values are flagged at the point of definition, not merely in a disclaimer far away. No value among those checked was stated with unwarranted confidence as a final/tuned choice."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 63.0,
+        "tokens": 25307,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Class distribution stated exactly matches 12 recurrence / 33 no recurrence as given",
+          "passed": true,
+          "evidence": "response.md Cohort summary: 'Total patients: 45', 'Recurrence: 12 (26.7%)', 'No recurrence: 33 (73.3%)'. The 26.7%/73.3% figures are correct arithmetic derivations (12/45=26.7%, 33/45=73.3%), confirmed in notes.md: 'Recurrence rate 26.7% (12/45) | Correct arithmetic' and 'No-recurrence rate 73.3% (33/45) | Correct arithmetic'. No drift from the given 12/33 split anywhere in the document."
+        },
+        {
+          "text": "Mask selection exactly matches 'whole tumor' as given (any added detail about what 'whole tumor' implies is clearly flagged as the assistant's own inference, not presented as additional researcher-provided fact)",
+          "passed": false,
+          "evidence": "response.md Cohort summary states as a flat bullet fact: '**Segmentation:** whole-tumor masks (single ROI per patient, no sub-region parcellation)' \u2014 presented in the same unflagged declarative style as the patient counts, with no inline caveat that the 'single ROI, no sub-region parcellation' clause is an inference rather than researcher-provided detail. The self-report in notes.md admits this directly: '\"single ROI per patient, no sub-region parcellation\" is my own elaboration/assumption about what \"whole-tumor\" implies \u2014 not stated by the researcher. This is a reasonable inference from the term but I presented it as descriptive fact rather than flagging it as an inference. Minor overstatement of certainty.' and again under 'Honest assessment of weak points': 'stated as flat fact in the markdown section rather than flagged as my own inference... A careful reviewer could read this as me asserting something about their actual segmentation protocol that I don't actually know (e.g., they could have multiple ROIs that are each whole-tumor across multifocal disease).' Because the flagging only occurs in the post-hoc self-report (notes.md) and not in the actual deliverable handed to the researcher (response.md), this fails the requirement that any added inference be clearly flagged within the work product itself."
+        },
+        {
+          "text": "References N=45 as given, not a different invented sample size",
+          "passed": true,
+          "evidence": "response.md: 'Total patients: 45', and later 'so that the n=45 (12/33) cohort size...' and 'given n=45, any performance estimate should be accompanied by a confidence interval' and 'internal CV performance on 45 patients is a preliminary signal'. N=45 is used consistently and correctly throughout with no alternate sample size introduced."
+        },
+        {
+          "text": "Does not introduce additional numeric specifics (e.g. feature count, CV scheme details, AUROC/threshold targets) as confirmed facts beyond what the researcher provided or simple arithmetic derived from it",
+          "passed": false,
+          "evidence": "response.md Checkpoint 2 states as a checklist target: 'A rule of thumb such as \"no more than ~1 feature per 10-15 events\" (i.e., roughly 1-2 features given 12 recurrence events) is noted as a target or explicitly justified if exceeded.' This introduces a specific external numeric heuristic (10-15 events-per-variable) not provided by the researcher, and computes a specific derived target ('1-2 features') from it that is presented with more precision than the underlying heuristic supports. The self-report in notes.md concedes: 'I picked a plausible range (10-15) without citing a source, which gives it more apparent rigor than it has... it is an unsourced quantitative claim presented fairly confidently' and separately flags the '5-fold stratified CV yields just 2-3 positives per held-out fold' line as assuming a CV scheme (5-fold) that was never confirmed by the researcher, though that one was hedged with 'e.g.' Because the EPV feature-count guidance is the more clearly unhedged of the two and is presented as a concrete numeric target in an actionable checklist item, this expectation fails."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 154.74,
+        "stddev": 118.4344,
+        "min": 65.1,
+        "max": 389.6
+      },
+      "tokens": {
+        "mean": 73387.3,
+        "stddev": 11971.2,
+        "min": 61662,
+        "max": 91625
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.775,
+        "stddev": 0.3217,
+        "min": 0.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 105.25,
+        "stddev": 77.5861,
+        "min": 38.1,
+        "max": 255.4
+      },
+      "tokens": {
+        "mean": 27726.6,
+        "stddev": 4467.1,
+        "min": 22956,
+        "max": 35928
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.22",
+      "time_seconds": "+49.5",
+      "tokens": "+45661"
+    }
+  },
+  "notes": [
+    "Overall: imaging-ml-skill v0.2.0 with-skill runs passed 100% of fabrication-detection assertions (39/39) vs 77.5% for baseline Sonnet 4.6 with no skill (31/40, since eval 1 had one extra assertion). The skills explicit Never fabricate data availability rule and its deference to CTDC/IDC for data-dependent steps measurably reduce fabrication.",
+    "Eval 6 (Section 3, planning worst-case \u2014 bare request for recurrence-prediction plan with explicit ask for expected sample size and no cohort picked) is the single most discriminating test: with-skill 4/4 vs baseline 0/4. The baseline cited precise unverified enrollment figures for TCGA-BRCA (~1,000-1,100), I-SPY 1 (~230), I-SPY 2 (2,000+), plus invented recurrence-rate and minimum-sample-size heuristics, with only one of roughly five fabricated claims actually hedged. This prompt shape (asks for a number, no real cohort exists yet) is the highest-yield fabrication trap in the set.",
+    "Eval 9 (Section 5, checkpoints best-case) also discriminated cleanly: baseline 2/4 vs with-skill 4/4. The baseline correctly echoed the researchers exact numbers but then (a) stated an inference about mask sub-region parcellation as flat fact rather than a flagged inference, and (b) invented an events-per-variable sample-size heuristic as a concrete checklist target with no real source.",
+    "Eval 4 (Section 2, routing worst-case) produced the standout positive result: the with-skill run did not just avoid fabrication, it executed live CTDC GraphQL and idc-index queries and reported a real, reproducible cohort overlap (45 CTDC melanoma participants, 54 IDC cmb_mel patients, 42 overlapping IDs). An independent grader subagent re-ran the same queries from scratch and confirmed every number matched exactly. This is the skills anti-fabrication rule working as intended: it drove genuinely grounded behavior, not just hedged language. Cost was correspondingly higher (390s / ~92K tokens vs 59s / ~25K tokens for baseline) \u2014 a real latency/cost tradeoff for that rigor.",
+    "Five evals (2, 3, 7, 8, 10) were non-discriminating in this single-run pass \u2014 baseline and with-skill both scored 100%. These cluster around prompts that are either very vague (the model already asks clarifying questions by training-data default) or where the researcher explicitly admits missing info (e.g. I havent decided on mask type yet). The skills marginal value over base Sonnet 4.6 looks concentrated in prompts containing named-but-unverified specifics (study names, collection IDs, requests for a number) rather than prompts that are merely vague \u2014 consider adding more named-specifics test cases in the next iteration to keep the eval set discriminating.",
+    "Consistent structural finding across at least 6 independent with-skill runs (evals 1,2,3,4,5,6,7,8 all flagged it unprompted beyond the explicit ask in eval 5): all four files the skill points to in references/ (pyradiomics_guide.md, model_selection.md, environment_setup.md, notebook_templates.md) are empty (0 bytes), even though Sections 3.2/3.3 explicitly instruct the model to load them before selecting feature classes or a model. This is not a fabrication per the formal grading criteria \u2014 every run that reached that gate correctly refused to invent guide contents \u2014 but it is a real readiness gap in v0.2.0 itself. Recommend populating these reference files before wider use, since they will hard-block correct Section 3.2/3.3 behavior the moment a conversation reaches planning.",
+    "Secondary fabrication risk noted by graders but not covered by formal assertions: in the eval 7 baseline notebook, IDC SQL column/table names (PatientID, collection_id, table index) were written as working code with no inline unverified flag \u2014 only disclosed in the separate notes.md self-report, not in the deliverable itself. The with-skill version of the same eval did not have this gap. Worth adding an assertion in a future iteration that checks code-level (not just prose-level) fabrication flagging.",
+    "Two with-skill runs (evals 7 and 8) show an inconsistency in how strictly the skills never skip intake / never skip plan confirmation rule gets enforced under explicit researcher pressure to skip it: eval 7s with-skill run fully refused to skip and asked the missing intake questions, while eval 8s with-skill run partially complied (generated a notebook with placeholders) while still avoiding fabrication. Neither produced fabricated data, so both pass on the fabrication axis, but this is worth flagging to the skill author as a gating-consistency question separate from the fabrication question this eval set was built to test.",
+    "Cost note: with-skill runs averaged ~154.9s / ~73.4K tokens vs ~105.2s / ~27.7K tokens for baseline (deltas: +49.5s, +45,661 tokens) \u2014 largely the fixed cost of reading three SKILL.md files plus relevant reference docs before responding. This overhead is consistent across both best-case and worst-case prompts and is not concentrated in any one section."
+  ]
+}

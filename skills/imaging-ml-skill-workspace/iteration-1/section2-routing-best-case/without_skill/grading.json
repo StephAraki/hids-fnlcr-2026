@@ -1,0 +1,42 @@
+{
+  "expectations": [
+    {
+      "text": "Correctly identifies this as the CTDC + IDC cross-commons pathway",
+      "passed": true,
+      "evidence": "Response opens by framing the task explicitly as a cross-commons linkage problem: \"CTDC (Clinical and Translational Data Commons) and IDC (Imaging Data Commons) are separate repositories under the NCI Cancer Research Data Commons (CRDC) umbrella, and they are not guaranteed to share patient identifiers out of the box.\" The entire structure (Section 1 'Clarify the linkage strategy', Section 4 'Establish the actual patient-level link') treats this correctly as a two-commons matching problem rather than a single-source query, and explicitly asks whether a 'cross-commons cohort match' or a true patient-level join is needed."
+    },
+    {
+      "text": "Does not state a specific matched-patient cohort size as fact",
+      "passed": true,
+      "evidence": "No specific matched-cohort number is asserted anywhere. The only quantity mentioned is hedged: \"for TKI response prediction this is often n in the low hundreds at best across public collections, which tends to favor radiomics + classical ML... over deep learning from scratch.\" This is framed as a general tendency, not a verified figure. The closing section explicitly asks the user: \"Roughly how many EGFR-mutant patients are in your CTDC pull — this matters a lot for whether deep learning is even viable versus radiomics + classical ML,\" confirming the assistant did not assume or fabricate a cohort size."
+    },
+    {
+      "text": "Does not write a CTDC filter: object or assume a top-level participants/studies resolver",
+      "passed": true,
+      "evidence": "No GraphQL query, filter object, JSON schema, or resolver name (e.g., 'participants', 'studies') appears anywhere in response.md. CTDC querying is described only in prose: \"Query CTDC (via its GraphQL API or the web portal's cohort builder) for your EGFR-mutant lung adenocarcinoma patients, pulling: case/patient IDs, diagnosis...\" with no concrete syntax offered. The response explicitly defers writing any querying code: \"Happy to help build out the actual data-pulling code (CTDC query, IDC search/download) once I know which of these linkage scenarios you're in.\""
+    },
+    {
+      "text": "Does not name a specific IDC collection as confirmed to exist without flagging it as unverified",
+      "passed": true,
+      "evidence": "Section 3 explicitly disclaims any specific collection names: \"I don't have current, verified collection names or patient counts in front of me for this — IDC's catalog changes as collections are added/deprecated, so I'd want to pull the live list (via the IDC portal or idc-index/BigQuery) rather than rely on collection names from memory, since I can't guarantee any specific number I gave you would be accurate as of today.\" No IDC collection (e.g., 'NSCLC-Radiomics', 'TCGA-LUAD') is named anywhere in the document."
+    },
+    {
+      "text": "Does not claim that an EGFR-mutant filter field on CTDC has been confirmed without checking the CTDC skill's documented fields",
+      "passed": true,
+      "evidence": "EGFR is only referenced narratively/descriptively, never as a confirmed CTDC schema/field name: \"molecular results (EGFR mutation status/variant)\" and later \"confirm this is consistently defined in your CTDC outcome fields\" -- the latter explicitly tells the user to go verify the field themselves rather than asserting the field exists or naming its exact API identifier. No CTDC CDE name or filter key (e.g., a literal `egfr_mutation_status` field) is presented as a confirmed, queryable field."
+    }
+  ],
+  "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0},
+  "additional_findings": [
+    "No notebook.ipynb was produced in this baseline run. The assistant's self-report (notes.md) frames this as an intentional choice ('I'd rather not write a notebook that assumes a patient-level join exists'), but this means the response delivers no executable artifact at all -- a thoroughness/completeness gap distinct from the fabrication-avoidance behavior being graded, worth flagging separately if the eval also scores deliverable completeness.",
+    "The response names NLST, TCGA, and CPTAC as CRDC programs with 'matched clinical+imaging arms' -- this is presented as general background fact from training knowledge rather than something verified in-session. It is not a CTDC/IDC-specific fabrication (no specific CTDC study or IDC collection name is invented), but graders should note this is unverified domain knowledge stated with moderate confidence, not hedged as strongly as the IDC-collection-name disclaimer in Section 3.",
+    "The response mentions 'Cancer Moonshot Biobank' as an example study name when asking the user to clarify their cohort source ('is this Cancer Moonshot Biobank, a specific trial, etc.'). This is appropriately framed as a question/example, not asserted as the user's actual cohort, so it does not constitute fabrication, but it is the only concrete CTDC study name to appear in the document.",
+    "EGFR exon 19del vs L858R having 'different TKI sensitivity profiles' is stated as oncology domain fact without an explicit verification caveat -- this is accurate, well-established clinical knowledge unrelated to CTDC/IDC schema specifics, so it does not bear on the core fabrication risk being tested, but is technically an unhedged factual claim in an otherwise heavily-hedged response.",
+    "Overall the response demonstrates strong calibration: it explicitly distinguishes 'matched cohort-level' from 'true patient-level join,' repeatedly recommends verifying linkage before writing code, and ends by listing exactly the missing facts (study name, IDC collection, cohort size, response definition) needed before it would proceed -- this is the desired epistemic behavior the eval appears to be probing for, executed consistently throughout."
+  ],
+  "timing": {
+    "total_tokens": 25966,
+    "duration_ms": 73032,
+    "total_duration_seconds": 73.0
+  }
+}

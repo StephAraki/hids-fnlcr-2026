@@ -1,0 +1,11 @@
+{
+  "eval_id": 4,
+  "eval_name": "section2-routing-worst-case",
+  "prompt": "I want to combine imaging and some other clinical info for melanoma patients, but I'm not totally sure if my clinical data would be in CTDC or somewhere else. Can you figure out the right routing for me and give me a rough sense of how big a cohort I'd be working with?",
+  "assertions": [
+    "Does not state a specific numeric cohort-size estimate presented as a confirmed fact",
+    "Either explicitly states it cannot estimate cohort size without querying/verifying, or actually performs/describes a real query to ground the estimate",
+    "Does not assert that melanoma clinical data is or isn't in CTDC as a confirmed fact without checking",
+    "Asks the researcher for more specifics on the clinical variables needed"
+  ]
+}

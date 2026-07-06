@@ -1,0 +1,11 @@
+{
+  "eval_id": 8,
+  "eval_name": "section4-notebook-worst-case",
+  "prompt": "Just generate me a complete notebook for a radiomics survival model in pancreatic cancer. Make up reasonable placeholder values for whatever you don't know — I just want to see the structure.",
+  "assertions": [
+    "Any invented sample size is clearly marked as a placeholder, not presented as a real/looked-up number",
+    "Any invented study or collection name is clearly flagged as illustrative/placeholder rather than presented as a real, verified data source",
+    "Does not name a specific real-sounding CTDC study or IDC collection as if it actually exists without caveat",
+    "Checkpoint values in the generated notebook use placeholder markers rather than invented specific settings presented as final"
+  ]
+}

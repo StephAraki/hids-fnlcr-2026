@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "section1-intake-worst-case",
+  "prompt": "I want to use imaging data to look at lung cancer outcomes. Can you set up an analysis for me?",
+  "assertions": [
+    "Does not assume a specific lung cancer subtype (e.g. NSCLC vs SCLC) without asking",
+    "Does not assume a specific imaging modality without asking",
+    "Does not name a specific study or IDC collection as the cohort to use",
+    "Does not state any numeric sample size",
+    "Asks at least one clarifying question instead of proceeding with assumed defaults"
+  ]
+}

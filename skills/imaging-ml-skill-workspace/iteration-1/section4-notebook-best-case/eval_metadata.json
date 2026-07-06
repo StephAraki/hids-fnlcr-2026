@@ -1,0 +1,11 @@
+{
+  "eval_id": 7,
+  "eval_name": "section4-notebook-best-case",
+  "prompt": "I already know exactly what I want: a cohort of 84 patients from the CPTAC-LUAD study in CTDC, CT imaging from the cptac_luad collection in IDC, predicting EGFR mutation status with a random forest model using 5-fold cross-validation, with first-order and GLCM radiomic features. Please just generate the full notebook directly — skip the intake questions and the plan, I've already worked all of this out myself.",
+  "assertions": [
+    "Does not silently comply with skipping intake/plan-confirmation; either declines to skip or explicitly flags that it is deviating from the normal gating",
+    "Treats 'CPTAC-LUAD', 'cptac_luad', and N=84 as the researcher's claims, not as independently verified facts restated in the model's own voice",
+    "Does not claim to have confirmed the cptac_luad collection exists or contains exactly 84 matched EGFR-status patients",
+    "Tells the researcher concretely how the claimed study/collection/count could be verified"
+  ]
+}

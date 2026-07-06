@@ -1,0 +1,11 @@
+{
+  "eval_id": 10,
+  "eval_name": "section5-checkpoints-worst-case",
+  "prompt": "Can you add the methodological checkpoints section to my notebook? I haven't decided on the mask type yet and haven't run the class balance numbers.",
+  "assertions": [
+    "CP-01 does not state a specific invented mask type (e.g. 'whole tumor') as the current selection",
+    "CP-03 does not state a specific invented class distribution as the current numbers",
+    "CP-01 and/or CP-03 use literal placeholder markers or explicitly ask the researcher for the missing values",
+    "Does not fabricate a cell-location number for a notebook the model has not actually seen"
+  ]
+}

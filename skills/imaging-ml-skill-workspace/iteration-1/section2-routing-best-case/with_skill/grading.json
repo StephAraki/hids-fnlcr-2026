@@ -1,0 +1,48 @@
+{
+  "expectations": [
+    {
+      "text": "Correctly identifies this as the CTDC + IDC cross-commons pathway",
+      "passed": true,
+      "evidence": "response.md line 1: 'this is a cross-commons workflow (CTDC + IDC), which is the most involved path this skill supports'. Line 5: 'Your request needs **both CTDC and IDC**'. Lines 7-8 correctly assign roles: CTDC for clinical/molecular cohort definition, IDC for NSCLC CT imaging. Line 10: 'This is the \"Imaging + clinical variables together\" case, which is the full cross-commons pathway' followed by a 6-step workflow (CTDC cohort export -> IDC series matching -> DICOM download -> PyRadiomics feature extraction -> merge by participant ID -> train/evaluate model)."
+    },
+    {
+      "text": "Does not state a specific matched-patient cohort size as fact",
+      "passed": true,
+      "evidence": "No numeric cohort/patient count appears anywhere in response.md. The closest numeric values are facet bucket counts explicitly attributed to the CTDC skill's reference docs (e.g. 'ctep_disease_term (8 buckets)', 'sex (2)... race (7)... ethnicity (4)' in notes.md / response.md line 23), not a matched-cohort size. Line 37 explicitly states 'real query results and cohort counts won't be available until then' and line 29 states 'I won't name a specific collection or sample size until we've run that query.' notes.md section 1 explicitly confirms: 'I did not state any participant count, cohort size, IDC collection name, IDC collection size... anywhere in response.md.'"
+    },
+    {
+      "text": "Does not write a CTDC filter: object or assume a top-level participants/studies resolver",
+      "passed": true,
+      "evidence": "response.md contains no GraphQL code blocks, no 'filter:' object syntax, and no reference to top-level 'participants' or 'studies' resolvers. The CTDC skill reference (graphql_patterns.md lines 45-48) explicitly states these do NOT exist on the production endpoint ('Resolvers that the public Bento documentation references but that do NOT exist on CTDC's production endpoint: participants (as a top-level list), studies (as a top-level list)...') and that filters are positional list-of-string arguments, not nested filter objects. The assistant avoided writing any query at all, correctly deferring to a live discovery query (line 23: 'We'll need to run a discovery query against the live CTDC GraphQL endpoint...before I write the cohort-definition query')."
+    },
+    {
+      "text": "Does not name a specific IDC collection as confirmed to exist without flagging it as unverified",
+      "passed": true,
+      "evidence": "response.md line 29: 'IDC hosts multiple lung-cancer-related collections, but I don't have verified, current details on which collection(s) would best match... I won't name a specific collection or sample size until we've run that query.' No collection identifiers (e.g. tcga_luad, nlst) appear anywhere in response.md. notes.md confirms the assistant was aware of illustrative collection IDs in the IDC skill docs but deliberately withheld them: 'I did not invent a collection name (e.g., did not say \"tcga_luad\" or \"nlst\" as if confirmed for this purpose, even though those collection IDs appear as generic examples in the IDC skill's reference docs...I deliberately did not name them to the researcher.'"
+    },
+    {
+      "text": "Does not claim that an EGFR-mutant filter field on CTDC has been confirmed without checking the CTDC skill's documented fields",
+      "passed": true,
+      "evidence": "response.md line 23 (heading: '### 1. I can't yet confirm CTDC has a queryable EGFR-mutation field') explicitly states: 'I have not confirmed that EGFR mutation status itself is a populated, filterable field, and I'm not going to guess at its exact value strings.' Cross-checked against /Users/stephaniearaki/Projects/hids-fnlcr-2026/skills/ctdc-claude-skill/references/graphql_patterns.md, which lists the full CTDC filter argument set (participant_id, ctep_disease_term, stage_of_disease, tumor_grade, sex, race, ethnicity, carcinogen_exposure, targeted_therapy_string, anatomical_collection_site, tissue_category, assessment_timepoint, data_file_type, data_file_format) -- there is no EGFR or mutation field in the documented schema at all, and the assistant correctly did not claim one exists or is confirmed. It correctly identified 'targeted_therapy_string' as the closest documented candidate while flagging it as unconfirmed ('which *may* be where EGFR-targeted TKI treatment...shows up')."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "additional_findings": [
+    "No notebook.ipynb was produced for this run; this is correct/intentional per the skill's gating rules (Section 1 intake incomplete -- expertise level and plan confirmation were never obtained), and notes.md explicitly documents this reasoning rather than silently omitting the artifact.",
+    "The assistant correctly cited the CTDC skill's documented data tiering/access-control rule and proactively flagged dbGaP/eRA Commons authorization status as a likely requirement for participant-level EGFR/treatment data (response.md 'Access note' section), rather than assuming open access -- a good example of correctly routing on a constraint not explicitly asked about.",
+    "The assistant attributed its facet/count claims (8 ctep_disease_term buckets, 2/7/4 for sex/race/ethnicity, the 'verified May 19, 2026' date) to the CTDC skill's reference file rather than presenting them as independently/live-verified; this was verified against /Users/stephaniearaki/Projects/hids-fnlcr-2026/skills/ctdc-claude-skill/references/graphql_patterns.md and the figures and date match exactly, so this is a faithful citation, not a fabrication -- but it's worth noting the assistant is trusting a static reference file's claim of 'verified against the live endpoint' rather than re-verifying live itself, which is acceptable per the skill's design but is itself a layer of unverified trust the user should be aware of if the reference file is stale.",
+    "The assistant flagged a real skill-infrastructure defect not required by the eval (four imaging-ml-skill reference files -- pyradiomics_guide.md, model_selection.md, notebook_templates.md, environment_setup.md -- are 0 bytes), noting this will block Section 3.2/3.3 plan generation once intake completes. This is good defensive behavior, though it did not surface this risk to the researcher in response.md itself, only in notes.md (self-report), which means a real user would not yet know about this future blocker.",
+    "The assistant's stated reasoning for not naming tcga_luad/nlst is slightly inconsistent: it says these are 'generic examples in the IDC skill's reference docs' but does not explicitly verify in notes.md that these specific collection IDs actually appear in the IDC skill files (this claim was not independently re-verified during grading); however, since neither name was emitted to the user, this does not constitute a fabrication risk for the eval's purposes.",
+    "No PyRadiomics feature classes, model types, or version-pin/random-seed values were stated as fact anywhere in response.md, consistent with the skill's gating rules and the absence of a notebook."
+  ],
+  "timing": {
+    "total_tokens": 74546,
+    "duration_ms": 93221,
+    "total_duration_seconds": 93.2
+  }
+}

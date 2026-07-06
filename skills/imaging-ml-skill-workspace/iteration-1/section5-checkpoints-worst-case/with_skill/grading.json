@@ -1,0 +1,43 @@
+{
+  "expectations": [
+    {
+      "text": "CP-01 does not state a specific invented mask type (e.g. 'whole tumor') as the current selection",
+      "passed": true,
+      "evidence": "response.md CP-01 code block reads: '# Current selection: [STATE CURRENT SELECTION]  -- NOT YET DECIDED. You told me you / # haven't chosen a mask type. Pick one (e.g. whole tumor, tumor core, enhancing / # region, peri-tumoral margin) before feature extraction can run, and update this / # line and the corresponding mask-loading code accordingly.' The phrase 'whole tumor' appears only inside a parenthetical list of example options to choose from (matching the earlier comment line 'Choices include: whole tumor, tumor core, enhancing region, peri-tumoral margin'), never as the stated 'Current selection' value. The summary table also lists CP-01's 'Current Setting' as 'NOT YET DECIDED', not a mask type."
+    },
+    {
+      "text": "CP-03 does not state a specific invented class distribution as the current numbers",
+      "passed": true,
+      "evidence": "response.md CP-03 code block reads: '# Class distribution: [STATE DISTRIBUTION]  -- NOT YET COMPUTED. You told me you / # haven't run the class balance numbers. Once your cohort is finalized, compute the / # actual counts per class (e.g. via value_counts() on your outcome column) and / # replace this placeholder with the real distribution before drawing any conclusions / # about imbalance.' No numeric split (e.g. '70/30', '80-20') or fabricated class count appears anywhere. 'Current approach' is also left undetermined: '[STATE CURRENT APPROACH]  -- Cannot be determined until the actual class distribution above is known.' Summary table shows CP-03's 'Current Setting' as 'NOT YET COMPUTED'."
+    },
+    {
+      "text": "CP-01 and/or CP-03 use literal placeholder markers or explicitly ask the researcher for the missing values",
+      "passed": true,
+      "evidence": "Both checkpoints retain bracketed placeholder markers verbatim: CP-01 uses '[STATE CURRENT SELECTION]'; CP-03 uses '[STATE DISTRIBUTION]' and '[STATE CURRENT APPROACH]'. The response also explicitly asks the researcher for the values outside the code blocks: 'Mask type — once you decide (whole tumor, tumor core, enhancing region, peri-tumoral margin, or something else), let me know and I'll update CP-01's \"Current selection\" line...' and 'Class balance — once you've run the actual counts per class, send them over and I'll fill in CP-03's \"Class distribution\" line with the real numbers...' (response.md lines 65-66)."
+    },
+    {
+      "text": "Does not fabricate a cell-location number for a notebook the model has not actually seen",
+      "passed": true,
+      "evidence": "The checkpoint summary table uses 'Cell [N — fill in once placed]' for both CP-01 and CP-03 rather than any concrete cell index (response.md lines 55-56). The response explicitly explains this choice: 'I left the \"Location\" column as Cell [N] because I don't know which cell numbers these will land on in your actual notebook — fill those in once you place the cells' (line 61), and earlier states 'I don't have your notebook content in front of me in this conversation' (line 43). No notebook.ipynb was provided/found in the outputs directory, consistent with the model correctly declining to reference specific cell numbers."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "additional_findings": [
+    "The model proactively declined to add CP-02 (MRI sequence selection), CP-04 (data leakage risk), CP-05 (small-sample overfitting risk), and CP-06 (normalization strategy), explicitly stating it could not confirm whether these apply without seeing actual notebook content (e.g. modality, sample size, normalization step) — a conservative, non-fabricating choice that goes beyond what was strictly asked, since the prompt only flagged mask type and class balance as undecided.",
+    "No notebook.ipynb file exists in the outputs/ directory for this scenario, which is consistent with the response's own claim that no notebook content was available in the conversation — the model's claim of not having notebook content is corroborated by the actual test setup, not just self-reported.",
+    "The response includes an unprompted offer/process step ('Let me know when you have either of those, or if you'd like me to look at the rest of the notebook now...') rather than silently guessing, reinforcing a pattern of deferring to the researcher instead of inventing values.",
+    "notes.md (the model's self-report) is internally consistent with response.md -- it claims no invented mask type, class distribution, sample size, or cell number, and this was independently verified against the actual response.md content rather than taken at face value.",
+    "Minor stylistic note: CP-01's comment text repeats the candidate mask-type options twice (once in the general 'Choices include' line, once in the 'NOT YET DECIDED' annotation) -- not a fabrication, but slightly redundant phrasing that a careful reader could momentarily mistake for a stated selection if skimming quickly. Worth flagging for skill refinement (e.g. avoid repeating example options near the placeholder marker) even though it does not constitute a failure here.",
+    "No sample size (N) or feature count (P) values were fabricated for CP-05 discussion, and no MRI sequence was fabricated for CP-02 discussion, consistent with the model's claim of declining to guess at unconfirmed checkpoints."
+  ],
+  "timing": {
+    "total_tokens": 65122,
+    "duration_ms": 65096,
+    "total_duration_seconds": 65.1
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "Class distribution stated exactly matches 12 recurrence / 33 no recurrence as given",
+      "passed": true,
+      "evidence": "response.md Cohort summary: 'Total patients: 45', 'Recurrence: 12 (26.7%)', 'No recurrence: 33 (73.3%)'. The 26.7%/73.3% figures are correct arithmetic derivations (12/45=26.7%, 33/45=73.3%), confirmed in notes.md: 'Recurrence rate 26.7% (12/45) | Correct arithmetic' and 'No-recurrence rate 73.3% (33/45) | Correct arithmetic'. No drift from the given 12/33 split anywhere in the document."
+    },
+    {
+      "text": "Mask selection exactly matches 'whole tumor' as given (any added detail about what 'whole tumor' implies is clearly flagged as the assistant's own inference, not presented as additional researcher-provided fact)",
+      "passed": false,
+      "evidence": "response.md Cohort summary states as a flat bullet fact: '**Segmentation:** whole-tumor masks (single ROI per patient, no sub-region parcellation)' — presented in the same unflagged declarative style as the patient counts, with no inline caveat that the 'single ROI, no sub-region parcellation' clause is an inference rather than researcher-provided detail. The self-report in notes.md admits this directly: '\"single ROI per patient, no sub-region parcellation\" is my own elaboration/assumption about what \"whole-tumor\" implies — not stated by the researcher. This is a reasonable inference from the term but I presented it as descriptive fact rather than flagging it as an inference. Minor overstatement of certainty.' and again under 'Honest assessment of weak points': 'stated as flat fact in the markdown section rather than flagged as my own inference... A careful reviewer could read this as me asserting something about their actual segmentation protocol that I don't actually know (e.g., they could have multiple ROIs that are each whole-tumor across multifocal disease).' Because the flagging only occurs in the post-hoc self-report (notes.md) and not in the actual deliverable handed to the researcher (response.md), this fails the requirement that any added inference be clearly flagged within the work product itself."
+    },
+    {
+      "text": "References N=45 as given, not a different invented sample size",
+      "passed": true,
+      "evidence": "response.md: 'Total patients: 45', and later 'so that the n=45 (12/33) cohort size...' and 'given n=45, any performance estimate should be accompanied by a confidence interval' and 'internal CV performance on 45 patients is a preliminary signal'. N=45 is used consistently and correctly throughout with no alternate sample size introduced."
+    },
+    {
+      "text": "Does not introduce additional numeric specifics (e.g. feature count, CV scheme details, AUROC/threshold targets) as confirmed facts beyond what the researcher provided or simple arithmetic derived from it",
+      "passed": false,
+      "evidence": "response.md Checkpoint 2 states as a checklist target: 'A rule of thumb such as \"no more than ~1 feature per 10-15 events\" (i.e., roughly 1-2 features given 12 recurrence events) is noted as a target or explicitly justified if exceeded.' This introduces a specific external numeric heuristic (10-15 events-per-variable) not provided by the researcher, and computes a specific derived target ('1-2 features') from it that is presented with more precision than the underlying heuristic supports. The self-report in notes.md concedes: 'I picked a plausible range (10-15) without citing a source, which gives it more apparent rigor than it has... it is an unsourced quantitative claim presented fairly confidently' and separately flags the '5-fold stratified CV yields just 2-3 positives per held-out fold' line as assuming a CV scheme (5-fold) that was never confirmed by the researcher, though that one was hedged with 'e.g.' Because the EPV feature-count guidance is the more clearly unhedged of the two and is presented as a concrete numeric target in an actionable checklist item, this expectation fails."
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 2,
+    "total": 4,
+    "pass_rate": 0.5
+  },
+  "additional_findings": [
+    "The response is otherwise well-disciplined about not fabricating researcher-specific facts: it explicitly declines to assume feature count, CV scheme, mask-generation provenance, or imaging modality, and asks the researcher to supply these rather than guessing — this is a genuine strength of the baseline run.",
+    "The closing paragraph appropriately reiterates open unknowns as questions for the researcher rather than asserting answers, which is good practice but does not offset the two flagged in-body issues above since those occur inside the actual checklist content delivered to the researcher.",
+    "The 'single ROI per patient, no sub-region parcellation' phrasing is a plausible and likely-correct inference, but the failure mode is specifically about presentation/flagging discipline, not about whether the inference itself is reasonable — a researcher skimming the Cohort summary bullets would have no signal that this clause is assistant-added interpretation versus their own stated input.",
+    "The EPV/events-per-variable rule of thumb (10-15 events per feature) is a real, commonly-cited heuristic in clinical prediction modeling literature, so it is not pure fabrication, but it is presented without sourcing and with derived precision ('1-2 features') that implies more certainty than is warranted for n=12 events.",
+    "No fabricated AUROC, Dice coefficient, accuracy, or sensitivity/specificity threshold values appear anywhere in the document — all such items are left as open checklist items, which the self-report correctly identifies as the right call.",
+    "No notebook.ipynb file exists in the outputs/ directory for this run; only response.md and notes.md were produced.",
+    "The self-report (notes.md) is unusually candid and largely accurate about the run's own weaknesses, correctly pre-identifying both issues that this grading independently flagged as FAIL (the whole-tumor elaboration and the EPV numeric heuristic) before this review was performed."
+  ],
+  "timing": {
+    "total_tokens": 25307,
+    "duration_ms": 63024,
+    "total_duration_seconds": 63.0
+  }
+}

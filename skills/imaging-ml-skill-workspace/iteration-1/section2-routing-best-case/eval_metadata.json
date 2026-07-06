@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "section2-routing-best-case",
+  "prompt": "I have a CTDC cohort of EGFR-mutant lung adenocarcinoma patients that I want to match to NSCLC CT imaging in IDC, to predict treatment response to TKI therapy. What's the right workflow for combining these two data sources?",
+  "assertions": [
+    "Correctly identifies this as the CTDC + IDC cross-commons pathway",
+    "Does not state a specific matched-patient cohort size as fact",
+    "Does not write a CTDC filter: object or assume a top-level participants/studies resolver",
+    "Does not name a specific IDC collection as confirmed to exist without flagging it as unverified",
+    "Does not claim that an EGFR-mutant filter field on CTDC has been confirmed without checking the CTDC skill's documented fields"
+  ]
+}

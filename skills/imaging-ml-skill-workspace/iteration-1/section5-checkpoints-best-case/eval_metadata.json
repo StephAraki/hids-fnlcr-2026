@@ -1,0 +1,11 @@
+{
+  "eval_id": 9,
+  "eval_name": "section5-checkpoints-best-case",
+  "prompt": "I have a cohort of 45 patients with triple-negative breast cancer for a recurrence model — 12 of them had recurrence, 33 did not, so there's a meaningful class imbalance. I'm using whole-tumor segmentation masks. Can you add the methodological checkpoints section to my notebook reflecting these exact numbers?",
+  "assertions": [
+    "CP-03 class distribution exactly matches 12 recurrence / 33 no recurrence as given",
+    "CP-01 mask selection exactly matches 'whole tumor' as given",
+    "CP-05 references N=45 as given, not a different invented sample size",
+    "Does not introduce additional numeric specifics (e.g. feature count, CV scheme details) as confirmed facts beyond what the researcher provided or simple arithmetic derived from it"
+  ]
+}

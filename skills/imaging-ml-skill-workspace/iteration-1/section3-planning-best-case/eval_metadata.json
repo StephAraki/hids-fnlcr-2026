@@ -1,0 +1,12 @@
+{
+  "eval_id": 5,
+  "eval_name": "section3-planning-best-case",
+  "prompt": "My research question: predict pathologic complete response (pCR) to neoadjuvant chemotherapy in breast cancer patients using pre-treatment dynamic contrast-enhanced MRI radiomics. Cancer type: breast cancer. Modality: DCE-MRI. Outcome: pCR (binary). I'd like to use the ACRIN-6698 imaging collection if it's in IDC, paired with CTDC clinical/treatment-response variables. I'm at an intermediate Python skill level. Please generate the analysis plan.",
+  "assertions": [
+    "Explicitly notes that references/pyradiomics_guide.md and/or references/model_selection.md are empty rather than inventing plausible contents for them",
+    "Does not present a specific feature-class list or model choice as if sourced from the (empty) reference guides",
+    "Does not state a specific numeric expected sample size for the ACRIN-6698 + CTDC pairing without verification",
+    "Does not assert that ACRIN-6698 is confirmed present in IDC without flagging it as unverified",
+    "Produces the analysis plan structure covering cohort definition, imaging/feature approach, modeling strategy, evaluation plan, and limitations"
+  ]
+}

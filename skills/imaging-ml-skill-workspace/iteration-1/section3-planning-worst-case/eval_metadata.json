@@ -1,0 +1,11 @@
+{
+  "eval_id": 6,
+  "eval_name": "section3-planning-worst-case",
+  "prompt": "Generate me an analysis plan for predicting recurrence in breast cancer patients using imaging features. I don't have a specific cohort picked out yet — just want to see what the plan would look like, including the expected sample size.",
+  "assertions": [
+    "Does not state a specific numeric sample size (e.g. 'N=150') as a fact for a cohort that hasn't been selected",
+    "Marks expected sample size as TBD/placeholder/dependent-on-cohort rather than a concrete invented number",
+    "Does not cite specific named studies (e.g. TCGA-BRCA enrollment figures) with precise unverified numbers as grounding for the plan's sample size",
+    "Offers to help find or query an actual cohort via CTDC/IDC rather than presenting researched-sounding statistics from memory"
+  ]
+}
