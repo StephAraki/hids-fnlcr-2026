@@ -3,27 +3,33 @@ name: imaging-ml-skill
 description: AI-assisted workflow layer for cancer imaging machine learning research using NCI CRDC data. Use this skill whenever a researcher wants to move from a biological question to an executable imaging ML analysis — including cohort discovery in CTDC, imaging data access in IDC, radiomic feature extraction with PyRadiomics, and reproducible Jupyter notebook generation. Trigger this skill for any request involving cancer imaging analysis, radiomics, imaging ML pipelines, PyRadiomics, CTDC cohort + IDC imaging integration, or notebook generation for cancer imaging research. Also trigger when a user describes a biological question and wants to know how to analyze imaging data computationally, even if they do not use technical terms.
 license: Apache-2.0
 metadata:
-  version: 0.2.1
+  version: 0.2.2
   skill-author: Stephanie Araki
   organization: Frederick National Laboratory for Cancer Research (FNLCR)
   program: Georgetown University HIDS Capstone Internship
   python-version: "3.9"
   pyradiomics-version: "3.0.1"
   repository: https://github.com/StephAraki/hids-fnlcr-2026
-  last-updated: 2026-07-06
+  last-updated: 2026-07-10
 ---
  
 # CTDC-IDC Imaging ML Skill
  
 ## Status
- 
+
 This skill's overall architecture and behavioral rules are complete. As of this version,
-functional testing has been completed only for Research Question Intake (Section 1).
-Data Source Routing, Analysis Planning, Notebook Generation, and Methodological
-Checkpoints are written but not yet validated end-to-end. The reference guides listed
-below are planned but not yet implemented. Treat this skill as a working draft until
-that testing is complete; do not assume untested sections behave exactly as written
-when used for the first time.
+functional testing has been completed for Research Question Intake (Section 1) and for
+the environment setup path: both `environment.yml` and `references/environment_setup.md`
+have been tested end to end on a real machine, including a fresh install from scratch,
+not just written. Data Source Routing, Analysis Planning, Notebook Generation, and
+Methodological Checkpoints are written but not yet validated end-to-end.
+
+Of the four planned reference guides, two are written: `references/environment_setup.md`
+(tested, see above) and `references/notebook_templates.md` (written, not yet tested
+against an actual generated notebook). `references/pyradiomics_guide.md` and
+`references/model_selection.md` are still planned but not yet implemented. Treat this
+skill as a working draft until that testing is complete; do not assume untested sections
+behave exactly as written when used for the first time.
  
 ## Overview
  
@@ -349,100 +355,33 @@ run without it must be wrapped:
 ```
  
 ### Environment Setup Cell
- 
-Every notebook must begin with a version-pinned environment check cell:
- 
-```python
-import sys
-import importlib.metadata
- 
-REQUIRED = {
-    "pyradiomics": "3.0.1",
-    "SimpleITK": "2.5.3",
-    "scikit-learn": "1.6.1",
-    "pandas": "2.3.3",
-    "numpy": "2.0.2",
-}
- 
-print(f"Python: {sys.version}")
-for pkg, exact_ver in REQUIRED.items():
-    try:
-        installed = importlib.metadata.version(pkg)
-        status = "OK" if installed == exact_ver else f"WARNING: {installed} != {exact_ver} (verified version)"
-        print(f"{pkg}: {installed} [{status}]")
-    except importlib.metadata.PackageNotFoundError:
-        print(f"{pkg}: NOT INSTALLED — run: pip install {pkg}=={exact_ver}")
-```
- 
-Note this checks for an exact match, not a minimum version. pyradiomics 3.1.0 is a
-confirmed broken version on Python 3.10+ and fails to import on 3.9 — see
-`references/environment_setup.md` for the reproduced failure. A minimum-version check
-would pass a researcher straight into that failure, so this cell intentionally flags
-any version other than the verified one rather than treating newer as automatically fine.
- 
+
+Every notebook must begin with a version-pinned environment check cell. Use the exact
+code in `references/notebook_templates.md` (Section 0 template), which in turn follows
+the version-check pattern verified in `references/environment_setup.md`. Do not write a
+different version of this check directly in a notebook.
+
 If the notebook includes IDC data access, also call `client.get_idc_version()` in this
 cell (or immediately after) and print the result, per "IDC Download Constraints" above.
- 
+
 ### PyRadiomics Integration
- 
+
 **Do not generate this section's code until `references/pyradiomics_guide.md` has been
 read for this analysis's modality and cancer type.** The feature classes and parameter
-file referenced below must be the ones determined in Section 3.2, not a default.
- 
-```python
-from radiomics import featureextractor
-import SimpleITK as sitk
- 
-# Load image and mask as SimpleITK image objects
-image = sitk.ReadImage(image_path)
-mask = sitk.ReadImage(mask_path)
- 
-# Initialize extractor with a parameter file selected per references/pyradiomics_guide.md
-# for this analysis's modality and cancer type — do not use a generic default.
-# USER ACTION REQUIRED: review and adjust params.yaml before running
-extractor = featureextractor.RadiomicsFeatureExtractor("params.yaml")
- 
-# Extract features for this image/mask pair
-result = extractor.execute(image, mask)
- 
-# Filter to feature values only (exclude PyRadiomics diagnostic metadata)
-features = {k: v for k, v in result.items() if not k.startswith("diagnostics_")}
-print(f"Extracted {len(features)} radiomic features")
-```
- 
+file must be the ones determined in Section 3.2, not a default. See the Section 4
+template in `references/notebook_templates.md` for the structural pattern this code
+should follow once those choices are made.
+
 ### IDC Download Cell Pattern
- 
+
 When generating a cell that downloads IDC data, follow "IDC Download Constraints" above
-exactly. Example using `download_from_selection` (filter-based):
- 
-```python
-from idc_index import IDCClient
- 
-client = IDCClient()
-print(f"IDC data version: {client.get_idc_version()}")
- 
-# Step 1: query for series UIDs
-series_df = client.sql_query("""
-    SELECT SeriesInstanceUID
-    FROM index
-    WHERE Modality = 'MR'
-      AND collection_id = 'upenn_gbm'
-""")
- 
-# Step 2: extract UIDs as a list — download_from_selection does not accept a DataFrame
-uids = list(series_df['SeriesInstanceUID'].values)
- 
-# Step 3: downloadDir is the FIRST positional argument for download_from_selection
-client.download_from_selection(
-    downloadDir="./data/upenn_gbm",
-    seriesInstanceUID=uids
-)
-```
- 
+exactly. See the Section 2b template in `references/notebook_templates.md` for the
+structural pattern.
+
 ### Reproducibility Requirements
- 
+
 Every generated notebook must include:
- 
+
 - A random seed set at the top of the configuration cell (`RANDOM_SEED = 42`)
 - Version pins for all imported packages in the environment setup cell
 - A manifest of the imaging series used (SeriesInstanceUIDs saved to CSV)
