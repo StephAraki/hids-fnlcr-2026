@@ -16,12 +16,14 @@ those three sections.
 
 ## Status
 
-This guide has not been tested end to end. The section templates below follow the
-13-section structure and cell-level standards already defined in SKILL.md, but the
-walkthrough-prose examples at each expertise tier are drafted from the description in
-SKILL.md's calibration table, not copied from a real generated notebook. Treat these as
-a starting point to validate against an actual notebook generation run, not as
-confirmed-correct output.
+This guide has not been tested end to end through an actual notebook generation run.
+A manual self-test (generating a sample notebook by hand against this guide's rules)
+found and fixed two gaps: no convention existed for skipping a non-applicable section
+(now added), and the expertise-tier walkthrough rule only had one worked example and no
+explicit list of which sections it applies to (now added). Those two fixes are reflected
+below, but neither has been confirmed against a real Claude Code run yet. The remaining
+templates follow the 13-section structure and cell-level standards already defined in
+SKILL.md, but are otherwise still unverified against real generated output.
 
 ---
 
@@ -57,6 +59,23 @@ run without it:
 # Contact your institution's data access office to apply.
 # =========================================
 ```
+
+**Skipped section markers**: any section marked "if applicable" or "if cross-commons"
+that does not apply to a given analysis (for example, Section 2a or Section 5 in an
+IDC-only analysis) must still appear in the notebook, in its numbered place, rather than
+being silently omitted. Use this exact markdown cell in place of the section's normal
+content:
+
+```markdown
+### 2a. CTDC Clinical Cohort
+
+**Not applicable to this analysis.** This is an IDC-only workflow; no CTDC cohort was
+defined in the analysis plan.
+```
+
+Keeping the numbered header with a one-line "not applicable" note, rather than deleting
+the section outright, keeps the notebook's section numbering consistent across
+different analyses and makes it clear the omission was deliberate rather than an error.
 
 ---
 
@@ -111,8 +130,9 @@ data for this analysis.
 
 #### 2a. CTDC Clinical Cohort (if applicable)
 
-Follow "CTDC Query Constraints" in SKILL.md for the actual query syntax. Structural
-pattern for this subsection:
+Follow "CTDC Query Constraints" in SKILL.md for the actual query syntax. If this
+analysis does not use CTDC, use the "Skipped section markers" convention above instead
+of the template below. Structural pattern for this subsection when CTDC applies:
 
 ```markdown
 ### 2a. CTDC Clinical Cohort
@@ -170,6 +190,10 @@ this analysis's modality and cancer type, per SKILL.md's existing gating rule. T
 feature classes and parameter file must come from that guide, not from this one.
 
 ### Section 5: Data Merging and Preparation (if cross-commons)
+
+If this analysis is single-commons (IDC-only or CTDC-only), use the "Skipped section
+markers" convention above in place of this section's content. Structural pattern when
+cross-commons applies:
 
 ```markdown
 ## 5. Data Merging and Preparation
@@ -287,11 +311,25 @@ or shorten the citations.
 
 ## Walkthrough Prose by Expertise Level
 
-These are concrete examples of the calibration table in SKILL.md, shown for Section 4
-(Radiomic Feature Extraction) as a representative case. Apply the same tone shift to
-every section's walkthrough cell.
+SKILL.md's calibration table states the rule but does not say which sections it applies
+to. Here is the explicit mapping, so this isn't left to guesswork per notebook:
 
-### Expertise: None
+- **None**: a walkthrough cell before every one of the 13 sections, not just some of them.
+- **Some**: a walkthrough cell only at three points: before Section 2 (Data Loading),
+  before Section 4 (Radiomic Feature Extraction), and before Section 8 (Model Training).
+  These are the three "major transitions" the calibration table refers to. No other
+  section gets a walkthrough cell at this tier.
+- **Comfortable**: a walkthrough cell only where a methodological checkpoint (CP-01
+  through CP-06) is present in that section, since that is the "domain-specific context"
+  the calibration table refers to. Sections with no checkpoint get no walkthrough cell.
+
+The examples below cover Section 4 at all three tiers, plus Section 2 and Section 8 at
+the "Some" tier, since that tier's other two transition points had no worked example
+before this revision. Apply the same tone pattern to any other cell that needs one.
+
+### Section 4 (Radiomic Feature Extraction) -- all three tiers
+
+#### Expertise: None
 
 ```markdown
 ### Before we extract features
@@ -304,7 +342,7 @@ next section will use them together, the same way a doctor might use several lab
 values together rather than looking at just one.
 ```
 
-### Expertise: Some
+#### Expertise: Some
 
 ```markdown
 ### Feature extraction
@@ -314,7 +352,7 @@ parameter file selected in the analysis plan. If you are unfamiliar with any spe
 feature class, the PyRadiomics documentation linked in Section 12 describes each one.
 ```
 
-### Expertise: Comfortable
+#### Expertise: Comfortable
 
 ```markdown
 ### Feature extraction
@@ -323,6 +361,28 @@ Standard PyRadiomics extraction using the plan's selected feature classes and pa
 file. See Section 3.2 of the analysis plan for the extraction rationale.
 ```
 
-Note the pattern: "None" explains the concept and why it matters before showing code.
-"Some" explains what the cell does and where to look something up if needed. "Comfortable"
+### Section 2 (Data Loading) -- Expertise: Some
+
+```markdown
+### Loading the data
+
+The next two cells retrieve the imaging data (and clinical data, if this analysis uses
+CTDC) needed for this analysis. This is a good point to confirm the cohort size printed
+below matches what was estimated in the analysis plan before continuing.
+```
+
+### Section 8 (Model Training) -- Expertise: Some
+
+```markdown
+### Training the model
+
+This cell trains the model type selected in Section 3.3 of the analysis plan. If you
+want to compare it against a different model type, that is a change worth discussing
+with a collaborator first, since model choice here was tied to your sample size and
+outcome type, not an arbitrary default.
+```
+
+Note the tone pattern across tiers: "None" explains the concept and why it matters
+before showing code. "Some" explains what the cell does and where to look something up
+or double check, without re-explaining Python or statistics fundamentals. "Comfortable"
 states what the cell does and defers to the plan document rather than re-explaining it.

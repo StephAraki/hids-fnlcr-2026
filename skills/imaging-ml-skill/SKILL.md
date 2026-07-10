@@ -25,7 +25,7 @@ not just written. Data Source Routing, Analysis Planning, Notebook Generation, a
 Methodological Checkpoints are written but not yet validated end-to-end.
 
 Of the four planned reference guides, two are written: `references/environment_setup.md`
-(tested, see above) and `references/notebook_templates.md` (written, not yet tested
+(tested, see above) and `references/notebook_structure.md` (written, not yet tested
 against an actual generated notebook). `references/pyradiomics_guide.md` and
 `references/model_selection.md` are still planned but not yet implemented. Treat this
 skill as a working draft until that testing is complete; do not assume untested sections
@@ -70,7 +70,7 @@ at the appropriate workflow stage. See "Working With the CTDC and IDC Skills" be
 |---|---|
 | `references/pyradiomics_guide.md` | Before making any feature class or parameter-file choice in Section 3.2, and before generating any PyRadiomics extraction code in Section 4 |
 | `references/environment_setup.md` | Python environment, dependency installation, version pinning, PyRadiomics troubleshooting |
-| `references/notebook_templates.md` | Section headers, cell structure, blocked cell patterns, markdown walkthrough templates |
+| `references/notebook_structure.md` | Section headers, cell structure, blocked cell patterns, markdown walkthrough templates |
 | `references/model_selection.md` | Before selecting a model in Section 3.3 |
  
 ---
@@ -357,7 +357,7 @@ run without it must be wrapped:
 ### Environment Setup Cell
 
 Every notebook must begin with a version-pinned environment check cell. Use the exact
-code in `references/notebook_templates.md` (Section 0 template), which in turn follows
+code in `references/notebook_structure.md` (Section 0 template), which in turn follows
 the version-check pattern verified in `references/environment_setup.md`. Do not write a
 different version of this check directly in a notebook.
 
@@ -369,13 +369,13 @@ cell (or immediately after) and print the result, per "IDC Download Constraints"
 **Do not generate this section's code until `references/pyradiomics_guide.md` has been
 read for this analysis's modality and cancer type.** The feature classes and parameter
 file must be the ones determined in Section 3.2, not a default. See the Section 4
-template in `references/notebook_templates.md` for the structural pattern this code
+template in `references/notebook_structure.md` for the structural pattern this code
 should follow once those choices are made.
 
 ### IDC Download Cell Pattern
 
 When generating a cell that downloads IDC data, follow "IDC Download Constraints" above
-exactly. See the Section 2b template in `references/notebook_templates.md` for the
+exactly. See the Section 2b template in `references/notebook_structure.md` for the
 structural pattern.
 
 ### Reproducibility Requirements
