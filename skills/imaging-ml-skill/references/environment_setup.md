@@ -114,8 +114,8 @@ REQUIRED = {
     "pyradiomics": "3.0.1",
     "SimpleITK": "2.5.3",
     "scikit-learn": "1.6.1",
-    "pandas": "2.3.3",
-    "numpy": "2.0.2",
+    "pandas": "2.2.3",     # 2.2.x so idc-index can coexist
+    "numpy": "1.26.4",     # NumPy 1.x REQUIRED -- see "NumPy 2.x Failure" below
 }
 
 print(f"Python: {sys.version}")
@@ -139,3 +139,55 @@ pyradiomics version is verified working in the future, update both this cell and
 Separately from the Python environment, IDC data itself is versioned. Any notebook that
 queries IDC should call and record `client.get_idc_version()` immediately after data
 access, since results are not guaranteed to reproduce across IDC data versions.
+
+---
+
+## Update 2026-07-20 (v0.3.0): NumPy pin corrected, idc-index resolved
+
+Two items above were revisited empirically when the execution layer was merged in. Both the
+"Verified Working Configuration" (numpy 2.0.2) and the idc-index open item are updated by the
+findings here; where they conflict, this section is authoritative.
+
+### NumPy 2.x Failure (why the pin is now numpy 1.26.4, not 2.0.2)
+
+pyradiomics 3.0.1 ships a compiled C extension (`_cmatrices`) built against the **NumPy 1.x** C
+ABI. Under **NumPy 2.x it fails at `import radiomics`** with:
+
+```
+ImportError: numpy.core.multiarray failed to import
+```
+
+This was reproduced on a clean Python 3.11 / Linux build, and a **forced source rebuild** of
+pyradiomics against numpy 2.0.2 did **not** fix it — the extension still resolves the NumPy-1.x
+`numpy.core.multiarray` path, which NumPy 2 removed. By contrast, **numpy 1.26.4 was verified end
+to end**: a real feature extraction ran and returned ~107 features, not merely an import.
+
+The earlier `numpy==2.0.2` pin came from an Apple-Silicon Mac where only `import radiomics` was
+checked, never a feature extraction (which is exactly where the ABI mismatch bites). Treat
+**NumPy 1.x as required** for pyradiomics 3.0.1 on any platform until someone verifies a full
+extraction — not just an import — under NumPy 2 on that platform.
+
+This joins the existing pyradiomics-3.1.0 / Python-3.12 failure as the second "pyradiomics is old"
+symptom: different Python and NumPy versions surface different errors, and the fix is the same —
+pin pyradiomics 3.0.1 on **NumPy 1.x** with an older setuptools.
+
+### Reliable build recipe
+
+pyradiomics 3.0.1 also needs an older setuptools (newer ones removed the `install_layout` build
+attribute) and `versioneer` at build time. The verified sequence:
+
+```bash
+pip install "setuptools<65" wheel versioneer "numpy==1.26.4"
+pip install --no-build-isolation pyradiomics==3.0.1
+```
+
+`--no-build-isolation` lets the build see the numpy 1.26.4 and older setuptools already installed,
+instead of pip fetching wrong-version build deps in an isolated sandbox.
+
+### idc-index Coexistence (open item resolved)
+
+idc-index now installs alongside pyradiomics. The blocker was pandas 2.3.3 vs idc-index requiring
+`pandas<=2.2.4`. Pinning **pandas==2.2.3** resolves it: on 2026-07-20, `numpy 1.26.4`,
+`pandas 2.2.3`, `scikit-learn`, `SimpleITK 2.5.x`, `pyradiomics 3.0.1`, and `idc-index 0.12.4` were
+confirmed to import together in one environment, with a real extraction succeeding. idc-index is
+therefore included in `environment.yml` as of v0.3.0.

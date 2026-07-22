@@ -1,0 +1,36 @@
+# PyRadiomics extraction settings for the imaging-ml skill.
+# Pass to: RadiomicsFeatureExtractor(<this file>)  OR  `pyradiomics img mask -p radiomics_params.yaml`.
+#
+# These defaults suit MRI (arbitrary intensity units) with a single-label tumor mask.
+# For CT (absolute Hounsfield units) set normalize: false and use a fixed binWidth.
+# See references/radiomics_features.md for the reasoning behind every setting.
+
+setting:
+  # --- Intensity handling ---
+  normalize: true          # MRI intensities are arbitrary; standardise before extraction
+  normalizeScale: 100      # rescale after normalizing so binWidth is meaningful
+  binWidth: 25             # texture-matrix bin width; 25 is a widely used default
+
+  # --- Geometry ---
+  resampledPixelSpacing:   # e.g. [1, 1, 1] to force isotropic 1mm voxels; null = keep native
+  interpolator: sitkBSpline
+  geometryTolerance: 0.001 # tolerate tiny image/mask grid mismatches after resampling
+  label: 1                 # voxel value in the mask marking the region of interest (tumor)
+
+  # --- Robustness ---
+  minimumROIDimensions: 2
+  correctMask: true        # auto-correct minor mask/image geometry differences
+
+# Original-image features only (no wavelet/LoG) -> ~100 features: lean and overfitting-resistant.
+# Add `LoG` / `Wavelet` under imageType to probe multi-scale texture on larger cohorts.
+imageType:
+  Original: {}
+
+featureClass:
+  shape:        # tumor geometry (volume, sphericity, elongation)
+  firstorder:   # intensity distribution (mean, entropy, skewness)
+  glcm:         # co-occurrence texture
+  glrlm:        # run-length texture
+  glszm:        # size-zone texture
+  gldm:         # dependence texture
+  ngtdm:        # neighbouring-tone-difference texture

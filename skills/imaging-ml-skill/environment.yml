@@ -1,49 +1,43 @@
-# environment.yml for imaging-ml-skill
+# environment.yml for imaging-ml-skill (v0.3.0)
 #
-# This file reflects a verified working environment (radiomics_env), confirmed on
-# 2026-07-06: `python -c "import radiomics; print(radiomics.__version__)"` returned
-# v3.0.1 with no errors under Python 3.9.25.
+# Two findings from 2026-07-20 changed this file from the v0.2.x version:
+#   1. NumPy MUST be 1.x. pyradiomics 3.0.1's compiled C extension is NumPy-1.x ABI and
+#      fails to import under NumPy 2.x ("numpy.core.multiarray failed to import"), even
+#      after a forced source rebuild. The prior numpy==2.0.2 pin did not reproduce as
+#      working on a clean Linux/Python 3.11 build; only `import radiomics` had been
+#      checked on an Apple-Silicon Mac, never a full feature extraction. numpy==1.26.4
+#      was verified end to end (real extraction). See references/environment_setup.md.
+#   2. idc-index now coexists (previously an open item). The conflict was pandas 2.3.3
+#      vs idc-index needing pandas<=2.2.4. Pinning pandas==2.2.3 lets pyradiomics,
+#      scikit-learn, SimpleITK, and idc-index all import together. Verified 2026-07-20.
 #
-# Conda manages the Python interpreter only. All packages are installed via pip,
-# since the working environment was built with plain pip inside a venv, not conda.
-# This avoids assuming conda-forge resolves pyradiomics the same way pip does --
-# that has not been tested.
-#
-# idc-index is intentionally NOT included below. See the note at the bottom of
-# this file and references/environment_setup.md before adding it.
+# conda manages the interpreter; packages are installed via pip. Because pyradiomics
+# builds C at install time, install order matters -- see references/environment_setup.md
+# if `conda env create` fails on the pyradiomics build (the venv recipe there pins
+# setuptools<65 and uses --no-build-isolation).
 
 name: imaging-ml-env
 channels:
   - conda-forge
 dependencies:
-  - python=3.9
+  - python=3.11          # 3.9-3.11 all work with NumPy 1.x
   - pip
+  - setuptools<65        # older setuptools needed to build pyradiomics 3.0.1
   - pip:
+      - numpy==1.26.4    # NumPy 1.x REQUIRED (see finding #1 above)
       - pyradiomics==3.0.1
       - SimpleITK==2.5.3
-      - scikit-learn==1.6.1
-      - pandas==2.3.3
-      - numpy==2.0.2
-      - scipy==1.13.1
-      - matplotlib==3.9.4
-      - seaborn==0.13.2
-      - PyYAML==6.0.3
-      - jupyterlab==4.5.6
-      - notebook==7.5.5
-      - ipykernel==6.31.0
-      - openpyxl==3.1.5
-
-# --- idc-index: not yet merged into this environment ---
-#
-# Current PyPI idc-index (0.12.3) requires pandas<=2.2.4. This environment pins
-# pandas==2.3.3, based on the verified working radiomics_env. Installing idc-index
-# as listed above would force a pandas downgrade that has not been tested against
-# pyradiomics 3.0.1.
-#
-# Before adding idc-index to this file:
-#   1. Create a throwaway environment from this file.
-#   2. Run: pip install idc-index
-#   3. Confirm pandas is not downgraded below what pyradiomics needs, and that
-#      both `import radiomics` and `from idc_index import IDCClient` succeed
-#      in the same environment.
-#   4. Only then add idc-index to the pip list above with its confirmed version.
+      - scikit-learn>=1.6
+      - pandas==2.2.3    # 2.2.x so idc-index can coexist
+      - scipy>=1.11,<1.14
+      - matplotlib>=3.7
+      - seaborn>=0.12
+      - PyYAML>=6.0
+      - jupyterlab>=4
+      - notebook>=7
+      - ipykernel>=6
+      - openpyxl>=3.1
+      - idc-index>=0.11  # resolved: coexists with the above (finding #2)
+      - pydicom>=2.3,<3  # DICOM SEG reading; pydicom-seg 0.4.1 needs pydicom<3
+      - pydicom-seg>=0.4
+      - lifelines>=0.27  # Kaplan-Meier / Cox survival analysis

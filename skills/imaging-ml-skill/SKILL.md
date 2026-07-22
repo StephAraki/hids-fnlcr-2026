@@ -3,33 +3,40 @@ name: imaging-ml-skill
 description: AI-assisted workflow layer for cancer imaging machine learning research using NCI CRDC data. Use this skill whenever a researcher wants to move from a biological question to an executable imaging ML analysis — including cohort discovery in CTDC, imaging data access in IDC, radiomic feature extraction with PyRadiomics, and reproducible Jupyter notebook generation. Trigger this skill for any request involving cancer imaging analysis, radiomics, imaging ML pipelines, PyRadiomics, CTDC cohort + IDC imaging integration, or notebook generation for cancer imaging research. Also trigger when a user describes a biological question and wants to know how to analyze imaging data computationally, even if they do not use technical terms.
 license: Apache-2.0
 metadata:
-  version: 0.2.2
+  version: 0.3.0
   skill-author: Stephanie Araki
   organization: Frederick National Laboratory for Cancer Research (FNLCR)
   program: Georgetown University HIDS Capstone Internship
-  python-version: "3.9"
+  python-version: "3.9-3.11"
   pyradiomics-version: "3.0.1"
   repository: https://github.com/StephAraki/hids-fnlcr-2026
-  last-updated: 2026-07-10
+  last-updated: 2026-07-20
 ---
  
 # CTDC-IDC Imaging ML Skill
  
 ## Status
 
-This skill's overall architecture and behavioral rules are complete. As of this version,
-functional testing has been completed for Research Question Intake (Section 1) and for
-the environment setup path: both `environment.yml` and `references/environment_setup.md`
-have been tested end to end on a real machine, including a fresh install from scratch,
-not just written. Data Source Routing, Analysis Planning, Notebook Generation, and
-Methodological Checkpoints are written but not yet validated end-to-end.
+This skill's overall architecture and behavioral rules are complete. As of v0.3.0, an
+**execution layer** has been merged in: the two previously-empty reference guides are now
+written (`references/pyradiomics_guide.md`, `references/model_selection.md`), and the
+skill now bundles tested, importable **scripts** (`scripts/extract_radiomics.py`,
+`scripts/make_synthetic_cohort.py`, `scripts/radiomics_params.yaml`) that generated
+notebooks call instead of re-deriving extraction and modeling code each time.
 
-Of the four planned reference guides, two are written: `references/environment_setup.md`
-(tested, see above) and `references/notebook_structure.md` (written, not yet tested
-against an actual generated notebook). `references/pyradiomics_guide.md` and
-`references/model_selection.md` are still planned but not yet implemented. Treat this
-skill as a working draft until that testing is complete; do not assume untested sections
-behave exactly as written when used for the first time.
+What has been run end to end, not just written: the environment setup path (both
+`environment.yml` and `references/environment_setup.md`); the PyRadiomics extraction
+component and its parameter file (real PyRadiomics 3.0.1, numpy 1.26.4, ~107 features per
+case); the leak-proof modeling pipeline and cross-validation scheme; and a merged
+UPenn-GBM proof-of-concept notebook that executes in an offline **demo mode** (synthetic
+data) from cohort assembly through IDH classification and Kaplan-Meier survival.
+
+What is written but not yet validated against a live run: Research Question Intake beyond
+Section 1, Data Source Routing, Analysis Planning, and the real-data (IDC download) path,
+which cannot execute in every environment because it needs network access to the Imaging
+Data Commons. Treat those as a working draft; do not assume they behave exactly as written
+on first use. The v0.3.0 merge was performed with an assistant; the workflow design,
+governance, and checkpoints remain the author's.
  
 ## Overview
  
@@ -71,8 +78,17 @@ at the appropriate workflow stage. See "Working With the CTDC and IDC Skills" be
 | `references/pyradiomics_guide.md` | Before making any feature class or parameter-file choice in Section 3.2, and before generating any PyRadiomics extraction code in Section 4 |
 | `references/environment_setup.md` | Python environment, dependency installation, version pinning, PyRadiomics troubleshooting |
 | `references/notebook_structure.md` | Section headers, cell structure, blocked cell patterns, markdown walkthrough templates |
-| `references/model_selection.md` | Before selecting a model in Section 3.3 |
- 
+| `references/model_selection.md` | Before selecting a model in Section 3.3, and for the leak-proof pipeline behind CP-04/CP-05 |
+
+**Bundled Scripts (tested; call from generated notebooks, do not re-derive):**
+
+| Script | Use |
+|---|---|
+| `scripts/extract_radiomics.py` | Batch PyRadiomics extraction over a cohort manifest → features CSV, with per-case failure handling. This is Section 4's extraction step. |
+| `scripts/radiomics_params.yaml` | The extraction settings (feature classes, normalization, binning). Pass to the extractor for reproducible features. |
+| `scripts/make_synthetic_cohort.py` | Generate offline synthetic volumes + masks + labels with a learnable signal. For teaching, environment smoke-tests, and the notebook's demo mode — runs with no download. |
+| `scripts/idc_helpers.py` | Prevent new-dataset config errors. `inspect_collection()` prints a collection's real sequence/segmentation/clinical names and values; `preflight_check()` validates a config against the live collection before any download and fails with the available options on a mismatch; `check_label_coverage()` guards the modeling step against missing/too-small classes. Use these whenever pointing the skill at an unfamiliar collection. |
+
 ---
  
 ## Working With the CTDC and IDC Skills
@@ -137,6 +153,35 @@ order. Before generating any IDC download cell:
   at the start of the notebook, before any query, and record the result.
 - When extracting UIDs from a query result for download, extract them as a list
   (`list(df['SeriesInstanceUID'].values)`) before passing to either download method.
+
+**Verified (2026-07-20) against idc-index 0.12.4:** the two signatures above are correct —
+`download_from_selection(downloadDir, ..., collection_id=, seriesInstanceUID=, ...)` takes
+`downloadDir` first, and `download_dicom_series(seriesInstanceUID, downloadDir, ...)` exists with
+`seriesInstanceUID` first. **Clinical tables:** load them with `get_clinical_table(short_table_name)`
+using the `short_table_name` value from `clinical_index` (not the full `table_name`), and join to
+imaging on the clinical `dicom_patient_id` column, which matches the imaging `PatientID`.
+
+### Preventing New-Dataset Config Errors (inspect first, preflight always)
+
+A config that names a sequence, segmentation, clinical column, or class value that a collection does
+not actually use is the number-one way this pipeline breaks on a new dataset — and the worst case
+fails silently (a mis-spelled class value maps every patient to "unknown", empties the cohort, and
+errors somewhere unrelated). Always use the bundled `scripts/idc_helpers.py` helpers before and during
+the data-access step:
+
+- **Inspect before configuring.** Run `inspect_collection("<collection_id>")` (or set
+  `INSPECT_FIRST = True` in the notebook) to print the collection's real MR/SEG series descriptions and
+  clinical columns and values. Fill the config from that output, never from a guess.
+- **Preflight before downloading.** Call `preflight_check(...)` at the top of the real-data path. It
+  validates the sequence match, segmentation match, outcome column, and class values against the live
+  collection and, on any mismatch, raises immediately with the available options — so the fix takes
+  seconds instead of surfacing partway through a multi-GB download.
+- **Guard the modeling step.** `check_label_coverage(y, CV_FOLDS)` stops with a clear message if only
+  one class survived labeling (usually a class-name typo) or a class is too small for the requested
+  cross-validation folds.
+
+The rule: validate the config against the real data and fail early with the available options; never
+guess a name, and never let a data-shape problem fail silently.
 ---
  
 ## Behavioral Rules
@@ -372,6 +417,21 @@ file must be the ones determined in Section 3.2, not a default. See the Section 
 template in `references/notebook_structure.md` for the structural pattern this code
 should follow once those choices are made.
 
+**Call the bundled extraction component rather than writing a new loop.** Section 4 should
+use `scripts/extract_radiomics.py` with `scripts/radiomics_params.yaml` (see
+`references/pyradiomics_guide.md`, "The bundled extraction component"). This is tested code
+with per-case failure handling; re-deriving it per notebook risks silent bugs.
+
+### Demo Mode (offline, no download)
+
+Every generated notebook should support a **demo mode** switch that runs the full pipeline on
+synthetic data via `scripts/make_synthetic_cohort.py`, with no IDC download and no network. This
+lets a researcher confirm their environment and see the pipeline work in seconds before committing
+to a real download, and it is how the pipeline itself is verified. The real-data path (IDC
+download) and the demo path must converge on the same cohort table (one row per patient with
+`patient_id`, `image_path`, `mask_path`, and the label column) so that everything after data
+loading is identical in both modes.
+
 ### IDC Download Cell Pattern
 
 When generating a cell that downloads IDC data, follow "IDC Download Constraints" above
@@ -450,6 +510,9 @@ exact warning format shown below.
 # applied to test data. Fitting on the full dataset before splitting is a
 # common source of optimistic bias in radiomic studies.
 # Verify: all preprocessing steps use fit_transform on train, transform on test.
+# IMPLEMENTATION: build the model as a scikit-learn Pipeline (scale -> select -> clf)
+# so these steps are refit inside each CV fold. See references/model_selection.md
+# ("The leak-proof pipeline") for the exact pattern this checkpoint requires.
 ```
  
 #### CP-05: Overfitting Risk (small sample)
@@ -462,6 +525,8 @@ exact warning format shown below.
 # - Leave-one-out cross-validation instead of hold-out split
 # - Reporting confidence intervals on all metrics
 # - External validation before drawing clinical conclusions
+# IMPLEMENTATION: repeated stratified k-fold with reported mean +/- sd, aggressive
+# feature selection, and a simple model. See references/model_selection.md.
 ```
  
 #### CP-06: Normalization Strategy
@@ -500,49 +565,59 @@ before results are interpreted or reported:
  
 ### Required Python Version
  
-Python 3.9, verified with pyradiomics 3.0.1. Do not use Python 3.10+ or pyradiomics
-3.1.0 — see `references/environment_setup.md` for the reproduced failure mode.
+Python 3.9–3.11, verified with pyradiomics 3.0.1 on **NumPy 1.x**. Do not use
+pyradiomics 3.1.0, and do not run pyradiomics under NumPy 2.x — see
+`references/environment_setup.md` for both reproduced failure modes.
  
 ### Core Dependencies
  
 ```
 pyradiomics==3.0.1
 SimpleITK==2.5.3
-scikit-learn==1.6.1
-pandas==2.3.3
-numpy==2.0.2
-scipy==1.13.1
-matplotlib==3.9.4
-seaborn==0.13.2
-PyYAML==6.0.3
-jupyterlab==4.5.6
-notebook==7.5.5
-ipykernel==6.31.0
-openpyxl==3.1.5
+scikit-learn>=1.6
+pandas==2.2.3          # 2.2.x, so idc-index can coexist (it requires pandas<=2.2.4)
+numpy==1.26.4          # NumPy 1.x REQUIRED; pyradiomics 3.0.1 will not import under NumPy 2.x
+scipy>=1.11,<1.14
+matplotlib>=3.7
+seaborn>=0.12
+PyYAML>=6.0
+jupyterlab>=4
+notebook>=7
+ipykernel>=6
+openpyxl>=3.1
+idc-index>=0.11        # resolved: coexists with the above when pandas is 2.2.x
+pydicom>=2.3,<3        # DICOM SEG masks; pydicom-seg 0.4.1 needs pydicom<3 (3.0 removed _storage_sopclass_uids)
+pydicom-seg>=0.4       # reads DICOM SEG segmentations into a label image
+lifelines>=0.27        # Kaplan-Meier / Cox survival analysis (survival notebooks)
 ```
  
-`idc-index` is intentionally not pinned here yet. Current PyPI idc-index (0.12.3)
-requires `pandas<=2.2.4`, which conflicts with the verified `pandas==2.3.3` above.
-This has not been tested together. See `references/environment_setup.md` before
-adding idc-index to any notebook's dependency list.
+**idc-index is now included (open item resolved).** The earlier conflict was pandas 2.3.3
+versus idc-index needing `pandas<=2.2.4`. Pinning `pandas==2.2.3` lets pyradiomics 3.0.1,
+scikit-learn, SimpleITK, and idc-index all import together; this full stack was verified on
+2026-07-20. See `references/environment_setup.md`.
  
-`pydicom` was previously listed here but is not part of the verified environment and
-its actual usage in this skill's generated code has not been confirmed. Do not assume
-it is needed until a specific cell requires it.
+`pydicom` and `pydicom-seg` are included because the real-data path reads DICOM SEG tumor masks.
+`lifelines` is included for survival analysis notebooks (Kaplan-Meier / Cox).
  
 ### Virtual Environment Setup
  
 ```bash
-python3.9 -m venv imaging_ml_env
+python3 -m venv imaging_ml_env       # Python 3.9-3.11
 source imaging_ml_env/bin/activate   # macOS/Linux
 # imaging_ml_env\Scripts\activate    # Windows
- 
+
 pip install --upgrade pip
-pip install pyradiomics==3.0.1 SimpleITK==2.5.3 scikit-learn==1.6.1 \
-            pandas==2.3.3 numpy==2.0.2 scipy==1.13.1 matplotlib==3.9.4 \
-            seaborn==0.13.2 PyYAML==6.0.3 jupyterlab==4.5.6 notebook==7.5.5 \
-            ipykernel==6.31.0 openpyxl==3.1.5
+# NumPy 1.x and an older setuptools must be present BEFORE building pyradiomics:
+pip install "setuptools<65" wheel versioneer "numpy==1.26.4"
+pip install --no-build-isolation \
+            pyradiomics==3.0.1 SimpleITK==2.5.3 "scikit-learn>=1.6" \
+            "pandas==2.2.3" "scipy>=1.11,<1.14" "matplotlib>=3.7" "seaborn>=0.12" \
+            "PyYAML>=6.0" "jupyterlab>=4" "notebook>=7" "ipykernel>=6" "openpyxl>=3.1" \
+            "idc-index>=0.11" "pydicom>=2.4" "pydicom-seg>=0.4" "lifelines>=0.27"
 ```
+
+If PyRadiomics fails to build, see `references/environment_setup.md` — the `--no-build-isolation`
+flag and the `setuptools<65` / `numpy==1.26.4` pins are what make it work.
  
 Or, using conda to manage the interpreter and pip for packages:
  

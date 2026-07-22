@@ -109,11 +109,19 @@ inline.
 # Replace the values below before running this notebook.
 # ============================================================
 RANDOM_SEED = 42                          # Fixed for reproducibility -- do not change unless intentional
+DEMO_MODE = True                           # True = run offline on synthetic data (no download); False = real IDC data
 CTDC_STUDY_NAME = "REPLACE_ME"             # Confirmed CTDC study name, from Section 3.1 of the analysis plan
 IDC_COLLECTION_ID = "REPLACE_ME"           # Confirmed IDC collection id, from Section 3.1 of the analysis plan
 OUTCOME_COLUMN = "REPLACE_ME"              # Column name for the outcome variable defined in intake
 DATA_DIR = "./data"                        # Local directory for downloaded imaging and clinical data
 ```
+
+Include a `DEMO_MODE` flag in the configuration of every generated notebook. When `True`, Section 2
+builds a synthetic cohort with `scripts/make_synthetic_cohort.py` (no download, runs in seconds) so
+the researcher can confirm the pipeline works before committing to a real IDC download; when
+`False`, Section 2 downloads real data. Both paths must produce the same cohort table shape
+(one row per patient: `patient_id`, `image_path`, `mask_path`, plus the outcome column), so every
+section after data loading is identical in both modes.
 
 Use literal `REPLACE_ME` placeholders for any value not yet confirmed against a live
 query, not a plausible-sounding invented name. A researcher should never mistake a
@@ -188,6 +196,15 @@ Extracts radiomic features from the preprocessed images using PyRadiomics.
 Code cell: do not generate until `references/pyradiomics_guide.md` has been read for
 this analysis's modality and cancer type, per SKILL.md's existing gating rule. The
 feature classes and parameter file must come from that guide, not from this one.
+
+Call the bundled, tested component rather than writing a fresh extraction loop:
+
+```python
+# scripts/extract_radiomics.py + scripts/radiomics_params.yaml (see pyradiomics_guide.md)
+from extract_radiomics import extract_cohort
+features_df, failures = extract_cohort(cohort_df, params_path="scripts/radiomics_params.yaml")
+print(f"{features_df.shape[0]} patients x {features_df.shape[1]} features; {len(failures)} failures")
+```
 
 ### Section 5: Data Merging and Preparation (if cross-commons)
 
