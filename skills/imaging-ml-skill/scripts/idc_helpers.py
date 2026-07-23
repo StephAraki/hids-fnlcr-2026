@@ -73,25 +73,27 @@ def inspect_collection(collection_id, client=None, max_values=8):
 
 def preflight_check(collection_id, sequence_match, segmentation_match,
                     outcome_column=None, positive_class=None, negative_class=None,
-                    client=None):
+                    modality="MR", client=None):
     """Validate a config against the live collection BEFORE downloading anything.
 
-    Checks that the sequence match, segmentation match, outcome column, and class values all
-    resolve against the real data. Raises ValueError listing the available options on any
-    mismatch; returns a small summary dict on success.
+    Checks that the imaging series (of the given modality; matched by sequence_match if that modality
+    has sequences), segmentation match, outcome column, and class values all resolve against the real
+    data. For CT/PT set sequence_match="" (one series per patient, no sequence to match). Raises
+    ValueError listing the available options on any mismatch; returns a small summary dict on success.
     """
     c = _client(client)
     problems, summary = [], {}
 
-    mr = c.sql_query(f"""SELECT COUNT(*) n FROM index
-        WHERE collection_id='{collection_id}' AND Modality='MR'
-          AND LOWER(SeriesDescription) LIKE '%{sequence_match.lower()}%'""")
-    summary["sequence_series"] = int(mr["n"].iloc[0])
-    if summary["sequence_series"] == 0:
+    seq_filter = f"AND LOWER(SeriesDescription) LIKE '%{sequence_match.lower()}%'" if sequence_match else ""
+    img = c.sql_query(f"""SELECT COUNT(*) n FROM index
+        WHERE collection_id='{collection_id}' AND Modality='{modality}' {seq_filter}""")
+    summary["image_series"] = int(img["n"].iloc[0])
+    if summary["image_series"] == 0:
         opts = c.sql_query(f"""SELECT DISTINCT SeriesDescription FROM index
-            WHERE collection_id='{collection_id}' AND Modality='MR' LIMIT 40""")
-        problems.append(f"SEQUENCE_MATCH '{sequence_match}' matched no MR series. "
-                        f"Available MR descriptions include: {list(opts['SeriesDescription'])[:20]}")
+            WHERE collection_id='{collection_id}' AND Modality='{modality}' LIMIT 40""")
+        problems.append(f"No {modality} series matched"
+                        + (f" SEQUENCE_MATCH '{sequence_match}'" if sequence_match else "")
+                        + f". Available {modality} descriptions include: {list(opts['SeriesDescription'])[:20]}")
 
     seg = c.sql_query(f"""SELECT COUNT(*) n FROM index
         WHERE collection_id='{collection_id}' AND Modality='SEG'

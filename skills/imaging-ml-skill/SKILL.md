@@ -3,14 +3,14 @@ name: imaging-ml-skill
 description: AI-assisted workflow layer for cancer imaging machine learning research using NCI CRDC data. Use this skill whenever a researcher wants to move from a biological question to an executable imaging ML analysis — including cohort discovery in CTDC, imaging data access in IDC, radiomic feature extraction with PyRadiomics, and reproducible Jupyter notebook generation. Trigger this skill for any request involving cancer imaging analysis, radiomics, imaging ML pipelines, PyRadiomics, CTDC cohort + IDC imaging integration, or notebook generation for cancer imaging research. Also trigger when a user describes a biological question and wants to know how to analyze imaging data computationally, even if they do not use technical terms.
 license: Apache-2.0
 metadata:
-  version: 0.3.0
+  version: 0.3.1
   skill-author: Stephanie Araki
   organization: Frederick National Laboratory for Cancer Research (FNLCR)
   program: Georgetown University HIDS Capstone Internship
   python-version: "3.9-3.11"
   pyradiomics-version: "3.0.1"
   repository: https://github.com/StephAraki/hids-fnlcr-2026
-  last-updated: 2026-07-20
+  last-updated: 2026-07-23
 ---
  
 # CTDC-IDC Imaging ML Skill
@@ -35,8 +35,10 @@ What is written but not yet validated against a live run: Research Question Inta
 Section 1, Data Source Routing, Analysis Planning, and the real-data (IDC download) path,
 which cannot execute in every environment because it needs network access to the Imaging
 Data Commons. Treat those as a working draft; do not assume they behave exactly as written
-on first use. The v0.3.0 merge was performed with an assistant; the workflow design,
-governance, and checkpoints remain the author's.
+on first use. v0.3.1 adds the reusable honest-reporting module (`scripts/evaluate_report.py`:
+confidence interval, permutation test, clinical baseline, auto-interpretation) and modality-general
+support (a MODALITY setting, CT no-sequence handling, and normalization off for CT). The workflow
+design, governance, and checkpoints remain the author's.
  
 ## Overview
  
@@ -88,6 +90,7 @@ at the appropriate workflow stage. See "Working With the CTDC and IDC Skills" be
 | `scripts/radiomics_params.yaml` | The extraction settings (feature classes, normalization, binning). Pass to the extractor for reproducible features. |
 | `scripts/make_synthetic_cohort.py` | Generate offline synthetic volumes + masks + labels with a learnable signal. For teaching, environment smoke-tests, and the notebook's demo mode — runs with no download. |
 | `scripts/idc_helpers.py` | Prevent new-dataset config errors. `inspect_collection()` prints a collection's real sequence/segmentation/clinical names and values; `preflight_check()` validates a config against the live collection before any download and fails with the available options on a mismatch; `check_label_coverage()` guards the modeling step against missing/too-small classes. Use these whenever pointing the skill at an unfamiliar collection. |
+| `scripts/evaluate_report.py` | Honest, reusable evaluation reporting for a classification analysis: bootstrap AUC confidence interval, permutation test (above chance?), clinical-only vs imaging vs combined baseline (does imaging add value?), and a plain-language interpretation scaled to sample size. Every generated notebook should report results with `full_classification_report(...)` rather than a bare AUC. |
 
 ---
  

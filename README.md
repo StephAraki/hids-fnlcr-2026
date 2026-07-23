@@ -1,48 +1,75 @@
 # hids-fnlcr-2026
-# Summer 2026 HIDS Capstone - AI-assisted scientific analysis for NCI Cancer Research Data Commons
 
+**Summer 2026 HIDS Capstone — AI-assisted cancer imaging analysis on the NCI Cancer Research Data Commons**
 
-## Internship Project
-
-**Student:** Stephanie Araki  
-**Program:** Health Informatics and Data Science, Georgetown University  
-**Mentor:** Dr. Mark Jensen, Frederick National Laboratory for Cancer Research (FNLCR)  
+**Student:** Stephanie Araki · Health Informatics and Data Science, Georgetown University
+**Mentor:** Dr. Mark Jensen, Frederick National Laboratory for Cancer Research (FNLCR)
 **Faculty Mentor:** Dr. Yuriy Gusev, Georgetown University
-**Summer 2026**
 
-## Project Overview
+---
 
-This project explores using AI language models and Claude skills to 
-help non-technical researchers ask biological questions and receive 
-scientifically meaningful findings from NCI cancer data resources, 
-specifically the Clinical and Translational Data Commons (CTDC).
+## Overview
 
-The work builds on the existing [ctdc-claude-skill](https://github.com/CBIIT/ctdc-claude-skill) 
-developed by the CBIIT/FNL team and the [idc-claude-skill](https://github.com/ImagingDataCommons/idc-claude-skill) 
-from the IDC team.
+This project builds and validates a **Claude skill for cancer imaging machine learning** — an
+AI-assisted workflow that takes a researcher from a plain-language question to a documented,
+reproducible **radiomics** analysis, with methodological checkpoints surfaced for expert review.
 
-## Research Question
+The main deliverable is the **[`imaging-ml-skill`](skills/imaging-ml-skill/)**: it extracts
+quantitative features from a segmented tumor with PyRadiomics, trains and honestly validates a
+scikit-learn model, and reports the result with a confidence interval, a permutation test, and a
+clinical baseline. It builds on the [IDC imaging-data-commons skill](https://github.com/ImagingDataCommons/idc-claude-skill)
+for data access and demonstrates the full pipeline on the UPenn-GBM brain-tumor cohort.
 
-Can an AI assistant, guided by existing CTDC and IDC skills, help a 
-non-technical researcher go from a biological question to a 
-scientifically useful finding backed by a Jupyter notebook — without the researcher 
-needing to have strong coding skills? 
+**Project scope note.** This work began by exploring the Clinical and Translational Data Commons
+(CTDC) and moved to the Imaging Data Commons (IDC), where the imaging data needed for a radiomics
+pipeline is available. The current focus is IDC. Early CTDC exploration is preserved for history in
+`notebooks/01_ctdc_skill_exploration.ipynb` and `docs/`.
 
-## Repository Structure
+## Research question
 
-- `notebooks/` — Jupyter notebooks demonstrating workflows
-- `skills/` — Skill files and extensions being developed
-- `docs/` — Observations, gap analysis, and meeting notes
-- `src/` — Supporting Python scripts and utilities
+Can an AI assistant, guided by a purpose-built skill, help a researcher go from a biological question
+to a scientifically sound, reproducible imaging-ML analysis — documented well enough that someone
+without strong coding skills can follow it?
+
+## Repository structure
+
+```
+.
+├── skills/
+│   ├── imaging-ml-skill/     # ← the main deliverable (see its own README)
+│   └── imaging-ml-skill-workspace/   # skill-creator evaluation runs (benchmark evidence)
+├── notebooks/
+│   └── 01_ctdc_skill_exploration.ipynb   # early CTDC exploration (history)
+│       (the UPenn-GBM proof-of-concept notebook lives inside the skill)
+├── docs/                     # observations and notes
+└── LICENSE
+```
+
+The proof-of-concept notebook is intentionally kept **inside the skill**
+(`skills/imaging-ml-skill/notebooks/`) so the skill is self-contained.
+
+## Getting started
+
+Everything needed to run the skill and its notebook is in the skill folder:
+
+1. Read **[`skills/imaging-ml-skill/README.md`](skills/imaging-ml-skill/README.md)** for what the
+   skill is and how to use it.
+2. Follow **[`skills/imaging-ml-skill/notebooks/HOW_TO_RUN.md`](skills/imaging-ml-skill/notebooks/HOW_TO_RUN.md)**
+   to set up the environment and run the proof-of-concept notebook (demo mode runs offline in ~1 minute).
 
 ## Status
 
-Week 1 — Environment setup and skills exploration
+Working draft (skill v0.3.1). The environment setup, the PyRadiomics extraction and evaluation
+components, and the proof-of-concept notebook are verified end to end (demo mode offline, and run on
+real UPenn-GBM data from IDC). The conversational workflow sections and the real-data path are
+written and partially validated. See the Status section in the skill's `SKILL.md` for detail.
 
-## Key Resources
+## Key resources
 
-- [CTDC Portal](https://clinical.datacommons.cancer.gov/)
-- [IDC Portal](https://imaging.datacommons.cancer.gov/)
-- [ctdc-claude-skill repo](https://github.com/CBIIT/ctdc-claude-skill)
-- [idc-claude-skill repo](https://github.com/ImagingDataCommons/idc-claude-skill)
-- [TCIA UPenn-GBM Dataset](https://www.cancerimagingarchive.net/collection/upenn-gbm/)
+- [NCI Imaging Data Commons (IDC) Portal](https://portal.imaging.datacommons.cancer.gov/)
+- [IDC imaging-data-commons skill](https://github.com/ImagingDataCommons/idc-claude-skill)
+- [TCIA UPenn-GBM dataset](https://www.cancerimagingarchive.net/collection/upenn-gbm/)
+- [PyRadiomics documentation](https://pyradiomics.readthedocs.io/)
+
+*Not a medical device. All outputs are for research and education only and must not be used for
+clinical decisions.*

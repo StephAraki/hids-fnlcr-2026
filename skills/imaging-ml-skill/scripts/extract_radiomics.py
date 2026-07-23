@@ -25,32 +25,43 @@ from pathlib import Path
 import pandas as pd
 
 
-def get_extractor(params_path: str | None = None):
-    """Build a PyRadiomics extractor from a params file, or from lean built-in defaults."""
+def get_extractor(params_path: str | None = None, overrides: dict | None = None):
+    """Build a PyRadiomics extractor from a params file, or from lean built-in defaults.
+
+    `overrides` updates the extractor settings after loading, e.g. {"normalize": False} for CT
+    (absolute Hounsfield units), where MR-style intensity normalization would throw away real signal.
+    """
     from radiomics import featureextractor
     logging.getLogger("radiomics").setLevel(logging.ERROR)
     if params_path and Path(params_path).exists():
-        return featureextractor.RadiomicsFeatureExtractor(str(params_path))
-    # Fallback defaults, matching radiomics_params.yaml, if no file is supplied.
-    ex = featureextractor.RadiomicsFeatureExtractor(
-        binWidth=25, normalize=True, normalizeScale=100,
-        interpolator="sitkBSpline", geometryTolerance=1e-3, label=1)
-    ex.disableAllFeatures()
-    for fam in ["shape", "firstorder", "glcm", "glrlm", "glszm", "gldm", "ngtdm"]:
-        ex.enableFeatureClassByName(fam)
+        ex = featureextractor.RadiomicsFeatureExtractor(str(params_path))
+    else:
+        # Fallback defaults, matching radiomics_params.yaml, if no file is supplied.
+        ex = featureextractor.RadiomicsFeatureExtractor(
+            binWidth=25, normalize=True, normalizeScale=100,
+            interpolator="sitkBSpline", geometryTolerance=1e-3, label=1)
+        ex.disableAllFeatures()
+        for fam in ["shape", "firstorder", "glcm", "glrlm", "glszm", "gldm", "ngtdm"]:
+            ex.enableFeatureClassByName(fam)
+    if overrides:
+        ex.settings.update(overrides)   # e.g. normalize=False for CT
     return ex
 
 
 def extract_cohort(cohort: pd.DataFrame, params_path: str | None = None,
                    image_col: str = "image_path", mask_col: str = "mask_path",
-                   id_col: str = "patient_id", verbose: bool = True):
-    """Extract features for every row of `cohort`. Returns (features_df, failures_df)."""
+                   id_col: str = "patient_id", verbose: bool = True,
+                   overrides: dict | None = None):
+    """Extract features for every row of `cohort`. Returns (features_df, failures_df).
+
+    `overrides` is passed to the extractor, e.g. {"normalize": False} for CT.
+    """
     required = {id_col, image_col, mask_col}
     missing = required - set(cohort.columns)
     if missing:
         raise ValueError(f"Cohort is missing required columns: {missing}")
 
-    extractor = get_extractor(params_path)
+    extractor = get_extractor(params_path, overrides=overrides)
     rows, failures = [], []
     n = len(cohort)
     for i, r in cohort.reset_index(drop=True).iterrows():

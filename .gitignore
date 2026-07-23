@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Notebook run artifacts and downloaded/derived imaging data — never commit
+**/data/
+**/output/
+**/work/
+*.nii.gz
+*.dcm
+*.joblib
+__pycache__/
+.ipynb_checkpoints/

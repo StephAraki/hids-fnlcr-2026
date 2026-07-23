@@ -115,6 +115,21 @@ Compare the imaging model against a **clinical-only** model (age and any standar
 variables). If radiomics does not improve on clinical variables alone, that is the finding —
 report it. An imaging biomarker earns its place only by adding value over what is already known.
 
+## Honest reporting standard (use the bundled module)
+
+Never report a bare AUC on a small cohort. Every classification analysis should report, via
+`scripts/evaluate_report.py` (`full_classification_report(model, X, y, oof_proba, cv, clinical_X=...)`):
+
+- a **bootstrap 95% confidence interval** on the AUC (how uncertain is the number),
+- a **permutation-test p-value** (is it above chance at all — shuffle labels, re-run, compare),
+- the **clinical-only vs imaging vs combined baseline** (does imaging add value over clinical), and
+- an **automatic interpretation** that scales its confidence to sample size, interval width, and the
+  p-value, so a non-expert cannot over-read a lucky number.
+
+The permutation test and CI wrap any cross-validated estimate, so they generalize to any dataset
+unchanged; the AUC-based metrics are classification-specific, so a regression or survival analysis
+needs its own reporting with the appropriate metrics (concordance index, calibration, etc.).
+
 ## Interpretation
 
 Fit the pipeline once on all data **for interpretation only** (never for scoring) to read which

@@ -6,9 +6,9 @@ documented, reproducible **radiomics** analysis: extract quantitative features f
 tumor with PyRadiomics, then train and honestly validate a scikit-learn model — with methodological
 checkpoints surfaced for expert review at every step.
 
-- **Version:** 0.3.0
+- **Version:** 0.3.1
 - **Author:** Stephanie Araki (Georgetown HIDS Capstone, Frederick National Laboratory)
-- **Companion skills:** `imaging-data-commons` (IDC access), `ctdc-claude-skill` (CTDC access)
+- **Companion skills:** `imaging-data-commons` (IDC access), `ctdc-skill` (clinical data)
 
 > **Proof of concept for research and education only. Not a medical device.** Outputs must never be
 > used for clinical decisions.
@@ -33,6 +33,7 @@ imaging-ml-skill/
 │   └── notebook_structure.md    #   the 13-section notebook layout and cell standards
 ├── scripts/                     # tested, reusable components (called by the notebook)
 │   ├── extract_radiomics.py     #   batch PyRadiomics feature extraction
+│   ├── evaluate_report.py       #   honest reporting: CI, permutation test, clinical baseline
 │   ├── make_synthetic_cohort.py #   offline synthetic data (demo mode / smoke tests)
 │   ├── idc_helpers.py           #   inspect a collection + preflight-check a config
 │   └── radiomics_params.yaml    #   the feature-extraction settings
@@ -102,7 +103,7 @@ common errors.
 
 ## Status
 
-Working draft (v0.3.0). Verified end to end: the environment setup, the PyRadiomics extraction
+Working draft (v0.3.1). Verified end to end: the environment setup, the PyRadiomics extraction
 component, the leak-proof modeling pipeline, and the proof-of-concept notebook (which runs in demo
 mode offline and has been run on real UPenn-GBM data from IDC). The conversational workflow sections
 (intake, routing, planning) and the real-data path are written and partially validated. Treat
