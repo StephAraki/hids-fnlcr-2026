@@ -1,0 +1,39 @@
+
+[project]
+name = "imaging-ml-skill"
+version = "0.3.0"
+description = "Radiomics and imaging machine learning workflow for cancer imaging research."
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "numpy==1.26.4",
+  "pandas==2.2.3",
+  "scipy==1.13.1",
+  "scikit-learn==1.6.1",
+  "SimpleITK==2.5.3",
+  "pyradiomics==3.0.1",
+  "matplotlib==3.9.4",
+  "seaborn==0.13.2",
+  "PyYAML==6.0.3",
+  "openpyxl==3.1.5",
+  "joblib==1.5.1",
+  "lifelines==0.30.0",
+  "ipykernel==6.31.0"
+]
+
+[project.optional-dependencies]
+real = [
+  "idc-index==0.12.4",
+  "pydicom==2.4.4",
+  "pydicom-seg==0.4.1"
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.extra-build-dependencies]
+pyradiomics = [
+  "numpy==1.26.4",
+  "setuptools<65",
+  "wheel",
+  "versioneer"
+]
