@@ -26,8 +26,10 @@ help build imaging-ML analyses. It also ships a fully worked, runnable proof-of-
 imaging-ml-skill/
 ├── SKILL.md                     # the skill itself: the workflow Claude follows
 ├── README.md                    # you are here
-├── requirements.txt             # pinned pip environment (+ install recipe)
-├── environment.yml              # conda alternative
+├── pyproject.toml               # dependencies (source of truth)
+├── uv.lock                      # locked versions for reproducible installs
+├── requirements.txt             # pip fallback
+├── environment.yml              # conda fallback
 ├── references/                  # guides Claude loads on demand
 │   ├── environment_setup.md     #   installing PyRadiomics reliably (the version pitfalls)
 │   ├── pyradiomics_guide.md     #   feature families + extraction settings
@@ -41,7 +43,7 @@ imaging-ml-skill/
 │   └── radiomics_params.yaml    #   the feature-extraction settings
 └── notebooks/
     ├── upenn_gbm_idh_radiomics_survival.ipynb   # the proof-of-concept notebook
-    └── HOW_TO_RUN.md            # step-by-step run guide (read this to run the notebook)
+    └── HOW_TO_RUN_v1.md         # step-by-step run guide (read this to run the notebook)
 ```
 
 ---
@@ -67,38 +69,46 @@ plus a Kaplan-Meier survival comparison). It runs in two modes:
   confirm your environment works.
 - **Real mode**: downloads real UPenn-GBM data from the Imaging Data Commons.
 
-**The complete step-by-step run guide is `notebooks/HOW_TO_RUN.md`** — read that to run the
-notebook. The short version:
+**The complete step-by-step run guide is `notebooks/HOW_TO_RUN_v1.md`** — read that to run the
+notebook. The short version (Python 3.11, using [uv](https://docs.astral.sh/uv/)):
 
 ```bash
-# 1. Create the environment (Python 3.9-3.11 required; NOT 3.12+)
-python3 -m venv venv && source venv/bin/activate         # or: conda create -n imaging-ml python=3.11
-pip install --upgrade pip
-pip install "setuptools<65" wheel versioneer "numpy==1.26.4"
-pip install --no-build-isolation -r requirements.txt
+# 1. Create the environment and install the locked dependencies
+cd skills/imaging-ml-skill
+uv venv --python 3.11
+source .venv/bin/activate
+uv sync --locked                 # base stack → demo mode
 
-# 2. Make the environment available to Jupyter / VS Code
-pip install ipykernel
+# 2. Register the environment as a Jupyter kernel
+python -m ipykernel install --user --name imaging-ml --display-name "Python (imaging-ml)"
 
-# 3. Open notebooks/upenn_gbm_idh_radiomics_survival.ipynb in VS Code or Jupyter Lab,
-#    select the imaging-ml kernel, and Run All. It is in demo mode by default.
+# 3. Launch JupyterLab from outside the env, open
+#    notebooks/upenn_gbm_idh_radiomics_survival.ipynb, select the "Python (imaging-ml)"
+#    kernel, and Run All. It is in demo mode by default.
+uv tool run --from jupyterlab jupyter-lab
 ```
 
-To run on real data instead, set `DEMO_MODE = False` in the notebook's Configuration cell and
-install the real-mode extras (`pip install "idc-index==0.12.4" "pydicom>=2.3,<3" pydicom-seg`). See
-`HOW_TO_RUN.md` for details and troubleshooting.
+To run on real data instead, install the real extra and set `DEMO_MODE = False` in the
+notebook's Configuration cell:
+
+```bash
+uv sync --locked --extra real
+```
+
+See `notebooks/HOW_TO_RUN_v1.md` for details and troubleshooting. A pip/conda fallback
+(`requirements.txt`, `environment.yml`) is documented in `references/environment_setup.md`.
 
 ---
 
 ## Environment notes (important)
 
-PyRadiomics 3.0.1 is version-sensitive. Two constraints matter, and both are handled by the pinned
-files above:
+PyRadiomics 3.0.1 is version-sensitive. Two constraints matter, and the `uv.lock` /
+`pyproject.toml` pins handle both:
 
-- **Python 3.9–3.11 only.** PyRadiomics 3.0.1 does not build on Python 3.12+.
+- **Python 3.11.** PyRadiomics 3.0.1 does not build on Python 3.12+; the project pins `>=3.11,<3.12`.
 - **NumPy 1.x required.** PyRadiomics 3.0.1's compiled extension will not import under NumPy 2.x.
 
-If an install fails, `references/environment_setup.md` has the verified recipe and the fixes for the
+If an install fails, `references/environment_setup.md` has the recipe and the fixes for the
 common errors.
 
 ---

@@ -7,10 +7,10 @@ metadata:
   skill-author: Stephanie Araki
   organization: Frederick National Laboratory for Cancer Research (FNLCR)
   program: Georgetown University HIDS Capstone Internship
-  python-version: "3.9-3.11"
+  python-version: "3.11"
   pyradiomics-version: "3.0.1"
   repository: https://github.com/StephAraki/hids-fnlcr-2026
-  last-updated: 2026-07-23
+  last-updated: 2026-07-29
 ---
  
 # CTDC-IDC Imaging ML Skill
@@ -60,10 +60,32 @@ at the appropriate workflow stage. See "Working With the CTDC and IDC Skills" be
 - Need a documented, commented notebook they or a collaborator can re-run
 **This skill does NOT:**
  
-- Execute code directly (it generates notebooks for the researcher to run)
+- Make analytical or methodological decisions on the researcher's behalf — it runs the work but pauses for sign-off at every decision point (see "Execution and Human Control" and Behavioral Rules)
 - Provide clinical recommendations or interpret results as diagnostic findings
 - Guarantee publication-ready output without expert methodological review
 - Replace biostatistical or clinical validation by domain experts
+
+## Execution and Human Control
+ 
+Where the environment can run code — for example, Claude Code, or any session with a shell
+and Python — this skill sets up the environment and runs the pipeline itself: it creates the
+pinned environment, runs demo mode, extracts radiomic features, trains the leak-proof model,
+and produces the honest-reporting output. Where code cannot be executed (for example, a plain
+chat interface), it instead generates a notebook the researcher runs. The behavior at the
+decision points is identical in both cases.
+ 
+Executing the work never moves a decision point. Stop and wait for explicit researcher
+sign-off at each of these gates:
+ 
+1. **Intake complete** — do not write or run any code until the required intake fields are confirmed (Section 1).
+2. **Plan approved** — present the analysis plan and get the researcher's acknowledgment before generating or executing any analysis code (Section 3).
+3. **Preflight confirmed** — before any real (multi-GB) IDC download, run `preflight_check(...)` and `check_label_coverage(...)` and show the result; do not proceed on a mismatch or an unusable cohort.
+4. **Checkpoints acknowledged** — surface every triggered methodological checkpoint (CP-01 … CP-06) for researcher review.
+5. **Results reviewed** — never present executed results as publication-ready; the checkpoint summary and the honest-reporting output require expert review before interpretation.
+ 
+The point is not to withhold execution — running the pipeline is helpful and expected. The
+point is that speed of implementation never becomes speed past a human decision.
+
 ## Quick Navigation
  
 **Core Workflow (inline, follow in order):**
@@ -191,6 +213,7 @@ guess a name, and never let a data-shape problem fail silently.
  
 These rules apply throughout every interaction using this skill. Never violate them.
  
+- **Execute freely, but never run past a decision gate.** In an environment where you can run code, set up the environment and run the pipeline yourself — demo mode, feature extraction, modeling, and honest reporting — rather than only describing it. But do not run past a human-approval gate: intake confirmed, analysis plan approved before any analysis code, and preflight plus class-balance confirmed before any real download. Execution speeds up implementation; it never moves the decision points. See "Execution and Human Control."
 - **Always complete intake before generating any code.** Do not write a notebook until all required intake fields are confirmed (Section 1).
 - **Always generate an analysis plan before generating a notebook.** The plan must be presented to the researcher and acknowledged before proceeding to notebook generation.
 - **Never present generated notebooks as publication-ready.** Always include a limitations section and methodological checkpoint summary.
@@ -338,8 +361,10 @@ Do not proceed to notebook generation until the researcher confirms the plan.
  
 ### Purpose
  
-Generate a complete, well-documented Jupyter notebook that a researcher can run
-end-to-end to execute the approved analysis plan.
+Generate a complete, well-documented Jupyter notebook that executes the approved analysis
+plan — one that Claude runs directly when execution is available, or that the researcher
+runs end-to-end otherwise. Either way, honor the USER ACTION cells and methodological
+checkpoints as gates while the notebook runs.
  
 ### Notebook Structure
  
@@ -566,77 +591,59 @@ before results are interpreted or reported:
  
 ## Environment Setup Reference
  
-### Required Python Version
+### Python version and dependency management
  
-Python 3.9–3.11, verified with pyradiomics 3.0.1 on **NumPy 1.x**. Do not use
-pyradiomics 3.1.0, and do not run pyradiomics under NumPy 2.x — see
-`references/environment_setup.md` for both reproduced failure modes.
+Python **3.11** (the packaging pins `>=3.11,<3.12`). Dependencies are managed with **uv**
+and locked in `uv.lock` for deterministic installs; `pyproject.toml` is the source of truth.
+The imaging stack is version-sensitive (pyradiomics 3.0.1 needs **NumPy 1.x**, and pins
+guard several build and resolution pitfalls), so prefer the lockfile over ad-hoc installs.
  
-### Core Dependencies
+The pinned base stack: `numpy==1.26.4`, `pandas==2.2.3`, `scipy==1.13.1`,
+`scikit-learn==1.6.1`, `SimpleITK==2.5.3`, `pyradiomics==3.0.1`, `matplotlib==3.9.4`,
+`seaborn==0.13.2`, `PyYAML==6.0.3`, `openpyxl==3.1.5`, `joblib==1.5.1`, `lifelines==0.30.0`,
+`ipykernel==6.31.0`. The real-data extra (`--extra real`) adds `idc-index==0.12.4`,
+`pydicom==2.4.4`, `pydicom-seg==0.4.1`. JupyterLab is intentionally **not** in the
+environment (pydicom-seg 0.4.1 needs `jsonschema<4`, modern JupyterLab needs
+`jsonschema>=4.18`); it runs outside the env against this environment's kernel.
  
-```
-pyradiomics==3.0.1
-SimpleITK==2.5.3
-scikit-learn>=1.6
-pandas==2.2.3          # 2.2.x, so idc-index can coexist (it requires pandas<=2.2.4)
-numpy==1.26.4          # NumPy 1.x REQUIRED; pyradiomics 3.0.1 will not import under NumPy 2.x
-scipy>=1.11,<1.14
-matplotlib>=3.7
-seaborn>=0.12
-PyYAML>=6.0
-jupyterlab>=4
-notebook>=7
-ipykernel>=6
-openpyxl>=3.1
-idc-index>=0.11        # resolved: coexists with the above when pandas is 2.2.x
-pydicom>=2.3,<3        # DICOM SEG masks; pydicom-seg 0.4.1 needs pydicom<3 (3.0 removed _storage_sopclass_uids)
-pydicom-seg>=0.4       # reads DICOM SEG segmentations into a label image
-lifelines>=0.27        # Kaplan-Meier / Cox survival analysis (survival notebooks)
-```
- 
-**idc-index is now included (open item resolved).** The earlier conflict was pandas 2.3.3
-versus idc-index needing `pandas<=2.2.4`. Pinning `pandas==2.2.3` lets pyradiomics 3.0.1,
-scikit-learn, SimpleITK, and idc-index all import together; this full stack was verified on
-2026-07-20. See `references/environment_setup.md`.
- 
-`pydicom` and `pydicom-seg` are included because the real-data path reads DICOM SEG tumor masks.
-`lifelines` is included for survival analysis notebooks (Kaplan-Meier / Cox).
- 
-### Virtual Environment Setup
+### One-command setup (uv)
  
 ```bash
-python3 -m venv imaging_ml_env       # Python 3.9-3.11
-source imaging_ml_env/bin/activate   # macOS/Linux
-# imaging_ml_env\Scripts\activate    # Windows
-
-pip install --upgrade pip
-# NumPy 1.x and an older setuptools must be present BEFORE building pyradiomics:
-pip install "setuptools<65" wheel versioneer "numpy==1.26.4"
-pip install --no-build-isolation \
-            pyradiomics==3.0.1 SimpleITK==2.5.3 "scikit-learn>=1.6" \
-            "pandas==2.2.3" "scipy>=1.11,<1.14" "matplotlib>=3.7" "seaborn>=0.12" \
-            "PyYAML>=6.0" "jupyterlab>=4" "notebook>=7" "ipykernel>=6" "openpyxl>=3.1" \
-            "idc-index>=0.11" "pydicom>=2.4" "pydicom-seg>=0.4" "lifelines>=0.27"
+cd skills/imaging-ml-skill
+uv venv --python 3.11
+source .venv/bin/activate
+uv sync --locked                 # base stack → demo mode
+python -m ipykernel install --user --name imaging-ml --display-name "Python (imaging-ml)"
 ```
-
-If PyRadiomics fails to build, see `references/environment_setup.md` — the `--no-build-isolation`
-flag and the `setuptools<65` / `numpy==1.26.4` pins are what make it work.
  
-Or, using conda to manage the interpreter and pip for packages:
+`uv sync --locked` installs exactly what is in `uv.lock` and errors if the lock has drifted
+from `pyproject.toml`. uv builds pyradiomics with the older setuptools and NumPy 1.x it needs
+automatically (see `[tool.uv.extra-build-dependencies]` in `pyproject.toml`), which replaces
+the old `--no-build-isolation` pip sequence.
+ 
+For the real-data (IDC download) path, add the extra and register a second kernel:
  
 ```bash
-conda env create -f environment.yml
-conda activate imaging-ml-env
+uv sync --locked --extra real
+python -m ipykernel install --user --name imaging-ml-real --display-name "Python (imaging-ml-real)"
 ```
  
-See `references/environment_setup.md` for troubleshooting PyRadiomics installation errors
-and the current idc-index compatibility status.
+Run JupyterLab from outside the environment and select the matching kernel:
+ 
+```bash
+uv tool run --from jupyterlab jupyter-lab
+```
+ 
+The full run walkthrough (demo vs real, the `DEMO_MODE` toggle) is in `notebooks/HOW_TO_RUN_v1.md`.
+For PyRadiomics build troubleshooting and the NumPy 1.x rationale, see
+`references/environment_setup.md`. A legacy pip/conda path (`environment.yml`) still exists as
+a fallback, but the uv lockfile above is the supported, deterministic route.
  
 ---
  
 ## Limitations of This Skill
  
-- **No live code execution**: This skill generates notebooks; it does not run them. All generated code must be tested and validated by the researcher before use.
+- **Execution depends on the environment; the decision gates do not.** Where code execution is available (for example, Claude Code), this skill sets up the environment and runs the pipeline itself; where it is not, it generates a notebook for the researcher to run. In both cases execution stops for researcher sign-off at the gates in "Execution and Human Control," and executed results are never automatically trustworthy — every methodological checkpoint and the final results still require expert review before they are interpreted or reported.
 - **No credential management**: CTDC dbGaP access must be obtained independently. This skill can generate skeleton notebooks for credentialed workflows but cannot execute them.
 - **No live skill-to-skill handoff**: This skill cannot detect or call the CTDC or IDC skill programmatically. It instructs Claude to adopt their documented behavior at the right workflow stage; see "Working With the CTDC and IDC Skills." If those skills' content is not present in the conversation, data-dependent steps should be flagged rather than improvised.
 - **Model non-determinism**: Generated notebooks may differ across sessions. Always version control generated notebooks and fix random seeds.

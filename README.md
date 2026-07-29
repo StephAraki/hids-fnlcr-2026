@@ -54,8 +54,8 @@ Everything needed to run the skill and its notebook is in the skill folder:
 
 1. Read **[`skills/imaging-ml-skill/README.md`](skills/imaging-ml-skill/README.md)** for what the
    skill is and how to use it.
-2. Follow **[`skills/imaging-ml-skill/notebooks/HOW_TO_RUN.md`](skills/imaging-ml-skill/notebooks/HOW_TO_RUN.md)**
-   to set up the environment and run the proof-of-concept notebook (demo mode runs offline in ~1 minute).
+2. Follow **[`skills/imaging-ml-skill/notebooks/HOW_TO_RUN_v1.md`](skills/imaging-ml-skill/notebooks/HOW_TO_RUN_v1.md)**
+   to set up the environment (Python 3.11 via uv) and run the proof-of-concept notebook (demo mode runs offline in ~1 minute).
 
 ## Status
 

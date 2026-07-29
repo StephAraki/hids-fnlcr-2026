@@ -1,113 +1,125 @@
 # Environment Setup Reference
 
-This guide documents the verified Python environment for imaging-ml-skill notebooks,
-troubleshooting steps for the most common PyRadiomics installation failure, and the
-current status of idc-index compatibility.
+This guide documents the supported Python environment for imaging-ml-skill, how to create
+it reproducibly with `uv`, and the troubleshooting for the version pitfalls the pins resolve.
 
-## Status
+## Supported setup: uv + lockfile
 
-Everything in this guide has been tested end to end, not just written. Two setup paths
-were confirmed on 2026-07-06: the conda path (environment.yml) and the manual venv
-path (the pip install block below). Both produced a working import of pyradiomics 3.0.1
-with no errors. The version-check code block was also run directly and confirmed to
-execute without errors, correctly reporting both a missing package and a version
-mismatch when tested against packages that did not match the pins.
+Python **3.11** (`pyproject.toml` pins `>=3.11,<3.12`). Dependencies are declared in
+`pyproject.toml` and locked in `uv.lock`, so `uv sync --locked` reproduces the exact,
+verified environment. This is the supported path; the pip and conda recipes further down are
+fallbacks.
 
-This testing was done on one machine: a MacBook Air with an Apple chip, using Python
-3.9 installed through Homebrew. This has not been confirmed on Windows, on Linux, or on
-an Intel Mac. Treat the verified configuration below as confirmed for that specific
-setup, not as confirmed across all platforms.
+```bash
+cd skills/imaging-ml-skill
+uv venv --python 3.11
+source .venv/bin/activate
+uv sync --locked                 # base stack → demo mode
+python -m ipykernel install --user --name imaging-ml --display-name "Python (imaging-ml)"
+```
 
-The pyradiomics 3.1.0 failure on Python 3.12 was independently reproduced, not just
-reported secondhand. The idc-index and pandas version conflict has not been tested and
-is flagged as an open item below; do not treat it as resolved.
+Real-data (IDC download) path — add the extra and register a second kernel:
 
+```bash
+uv sync --locked --extra real
+python -m ipykernel install --user --name imaging-ml-real --display-name "Python (imaging-ml-real)"
+```
 
-## Verified Working Configuration
+JupyterLab is run *outside* this environment (see "Why JupyterLab is not in the environment"):
 
-The following was confirmed working on 2026-07-06 in a plain venv (not conda), using
-`python -c "import radiomics; print(radiomics.__version__)"`, which returned `v3.0.1`
-with no errors.
+```bash
+uv tool run --from jupyterlab jupyter-lab
+```
 
-- Python: 3.9.25
+`uv sync --locked` installs exactly what is in `uv.lock` and errors if the lock has drifted
+from `pyproject.toml`. `uv` builds pyradiomics with the older setuptools and NumPy 1.x it
+needs automatically, via `[tool.uv.extra-build-dependencies]` in `pyproject.toml` — that
+replaces the manual `--no-build-isolation` step the pip fallback still requires. The full run
+walkthrough (demo vs real, the `DEMO_MODE` toggle) is in `notebooks/HOW_TO_RUN_v1.md`.
+
+## Verified configuration (pins)
+
+Confirmed importing **and running a real feature extraction** together (numpy 1.26.4, not an
+import-only check):
+
+- Python: 3.11
 - pyradiomics: 3.0.1
-- SimpleITK: 2.5.3
-- scikit-learn: 1.6.1
-- pandas: 2.3.3
-- numpy: 2.0.2
+- numpy: 1.26.4   — NumPy 1.x REQUIRED (see "NumPy 2.x failure")
+- pandas: 2.2.3   — 2.2.x so idc-index, which needs `pandas<=2.2.4`, can coexist
 - scipy: 1.13.1
+- scikit-learn: 1.6.1
+- SimpleITK: 2.5.3
+- matplotlib: 3.9.4 · seaborn: 0.13.2 · PyYAML: 6.0.3 · openpyxl: 3.1.5 · joblib: 1.5.1 · lifelines: 0.30.0 · ipykernel: 6.31.0
+- real extra: idc-index 0.12.4 · pydicom 2.4.4 · pydicom-seg 0.4.1
 
-This is the configuration this skill's notebooks should be generated against until a
-different combination is independently verified. Do not substitute pyradiomics 3.1.0
-or a Python version other than 3.9 without testing first -- see the failure mode below.
+`uv.lock` is the authoritative record of the full resolved set. Do not substitute pyradiomics
+3.1.0 or Python 3.12+ (both are confirmed failures below).
 
-## Setup Instructions
+## Fallback: pip
 
-Using conda to manage the interpreter and pip for packages:
+If `uv` is unavailable, reproduce the same pins with pip. pyradiomics 3.0.1 must be built with
+NumPy 1.x and an older setuptools present first:
+
+```bash
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install --upgrade pip
+pip install "setuptools<65" wheel versioneer "numpy==1.26.4"
+pip install --no-build-isolation -r requirements.txt        # base (demo)
+pip install --no-build-isolation -r requirements-real.txt   # adds idc-index, pydicom, pydicom-seg
+```
+
+## Fallback: conda
 
 ```bash
 conda env create -f environment.yml
 conda activate imaging-ml-env
-python -c "import radiomics; print(radiomics.__version__)"
+python -c "import radiomics; print(radiomics.__version__)"   # expect 3.0.1
 ```
 
-Using a plain venv instead of conda:
+## Known failure: pyradiomics 3.1.0 on Python 3.10+ / 3.12
 
-```bash
-python3.9 -m venv imaging_ml_env
-source imaging_ml_env/bin/activate
-pip install pyradiomics==3.0.1 SimpleITK==2.5.3 scikit-learn==1.6.1 \
-            pandas==2.3.3 numpy==2.0.2 scipy==1.13.1 matplotlib==3.9.4 \
-            seaborn==0.13.2 PyYAML==6.0.3 jupyterlab==4.5.6 notebook==7.5.5 \
-            ipykernel==6.31.0 openpyxl==3.1.5
-```
+pyradiomics 3.1.0 fails to install on Python 3.10+ and to import on 3.9. Reproduced on Python
+3.12: install fails during metadata generation with `AttributeError: module 'configparser'
+has no attribute 'SafeConfigParser'` — removed in 3.12 and called by pyradiomics 3.1.0's own
+`versioneer.py`. This is a real package incompatibility, not a user misconfiguration. Fix:
+pyradiomics 3.0.1 on Python 3.11 with NumPy 1.x (the pinned/locked configuration), not a
+different 3.10+ patch version.
 
-Either path should print `3.0.1` with no traceback. If it does not, do not proceed to
-feature extraction -- see the troubleshooting section below.
+## NumPy 2.x failure (why numpy is pinned to 1.26.4)
 
-## Known Failure: pyradiomics 3.1.0 on Python 3.10+
+pyradiomics 3.0.1 ships a compiled C extension (`_cmatrices`) built against the NumPy 1.x C
+ABI. Under NumPy 2.x it fails at `import radiomics` with `ImportError: numpy.core.multiarray
+failed to import`. A forced source rebuild against numpy 2.0.2 did **not** fix it — the
+extension still resolves the NumPy-1.x `numpy.core.multiarray` path that NumPy 2 removed.
+numpy 1.26.4 was verified end to end (a real extraction returning ~107 features, not just an
+import). An earlier numpy 2.0.2 note came from an Apple-Silicon Mac where only `import
+radiomics` was checked, never an extraction — which is exactly where the ABI mismatch bites.
+Treat NumPy 1.x as required until someone verifies a full extraction under NumPy 2 on their
+platform.
 
-pyradiomics 3.1.0 fails to install on Python 3.10 and later, and fails to import on
-Python 3.9. This was independently reproduced on Python 3.12: the install fails during
-metadata generation with `AttributeError: module 'configparser' has no attribute
-'SafeConfigParser'`. This attribute was removed in Python 3.12 and is called by
-pyradiomics 3.1.0's own `versioneer.py`, so this is not an environment misconfiguration
-on the researcher's side -- it is a real incompatibility in that package version.
+## idc-index coexistence and the resolution-too-deep pitfall
 
-If a researcher reports this exact error, or reports that `pip install pyradiomics`
-succeeds but `import radiomics` fails, the fix is to downgrade to pyradiomics 3.0.1
-on Python 3.9, not to try a different Python 3.10+ patch version.
+idc-index installs alongside pyradiomics once pandas is pinned to 2.2.3 (idc-index needs
+`pandas<=2.2.4`; the earlier conflict was pandas 2.3.3). idc-index is pinned to `==0.12.4`,
+not a loose bound: a loose bound pulls duckdb/pyarrow and sends pip's resolver into a
+"resolution-too-deep" failure. If you hit that with the pip fallback, install idc-index on its
+own line after the rest, or add `duckdb==1.1.3`. `uv` plus the lockfile avoids this entirely.
 
-```bash
-pip uninstall pyradiomics
-pip install pyradiomics==3.0.1
-```
+## Why JupyterLab is not in the environment
 
-A separate package, `pyradiomics-fix`, exists on PyPI and claims to patch installation
-for Python 3.9 and 3.10. It has not been tested as part of this skill's verification and
-should not be recommended until someone confirms it actually resolves the import failure,
-not just the install step.
+pydicom-seg 0.4.1 requires `jsonschema<4`, while modern JupyterLab needs `jsonschema>=4.18`.
+Installing both in one environment conflicts. So this environment is used only as a notebook
+*kernel*, and JupyterLab is launched separately with `uv tool run --from jupyterlab
+jupyter-lab` (or from your base/conda install). Register the kernel with `python -m ipykernel
+install --user --name imaging-ml ...` and select it in JupyterLab.
 
-## idc-index Compatibility -- Not Yet Verified
+## Version check cell
 
-idc-index (currently 0.12.3 on PyPI) requires `pandas<=2.2.4`. The verified environment
-above uses `pandas==2.3.3`. Installing idc-index into the verified environment as-is
-will attempt to downgrade pandas, and that downgraded combination has not been tested
-against pyradiomics 3.0.1.
-
-Do not tell a researcher to `pip install idc-index` directly into the environment above
-without flagging this. Until this is tested and resolved, treat any workflow that needs
-both pyradiomics and idc-index in the same environment as an open verification item, and
-say so explicitly rather than assuming the two packages coexist cleanly.
-
-## Version Check Cell
-
-Notebooks generated by this skill should use the following version-check cell, matching
-the verified configuration above rather than an aspirational one:
+Notebooks generated by this skill should use a version-check cell that asserts the locked
+configuration:
 
 ```python
 import sys
-from packaging.version import Version
 import importlib.metadata
 
 REQUIRED = {
@@ -115,79 +127,25 @@ REQUIRED = {
     "SimpleITK": "2.5.3",
     "scikit-learn": "1.6.1",
     "pandas": "2.2.3",     # 2.2.x so idc-index can coexist
-    "numpy": "1.26.4",     # NumPy 1.x REQUIRED -- see "NumPy 2.x Failure" below
+    "numpy": "1.26.4",     # NumPy 1.x REQUIRED — see "NumPy 2.x failure"
 }
 
 print(f"Python: {sys.version}")
 for pkg, exact_ver in REQUIRED.items():
     try:
         installed = importlib.metadata.version(pkg)
-        status = "OK" if installed == exact_ver else f"WARNING: {installed} != {exact_ver} (verified version)"
+        status = "OK" if installed == exact_ver else f"WARNING: {installed} != {exact_ver} (locked version)"
         print(f"{pkg}: {installed} [{status}]")
     except importlib.metadata.PackageNotFoundError:
-        print(f"{pkg}: NOT INSTALLED -- run: pip install {pkg}=={exact_ver}")
+        print(f"{pkg}: NOT INSTALLED — run: uv sync --locked")
 ```
 
-Note this checks for an exact match against the verified version rather than a minimum
-version bound. Given that pyradiomics 3.1.0 is a confirmed failure case rather than an
-untested one, a `>=` check would pass a researcher on a broken version. If a newer
-pyradiomics version is verified working in the future, update both this cell and the
-"Verified Working Configuration" section above together.
+An exact-match check is deliberate: pyradiomics 3.1.0 is a confirmed failure, so a `>=` check
+would pass a researcher on a broken version. If a newer configuration is verified in future,
+update this cell, the pins in `pyproject.toml`, and `uv.lock` together.
 
-## IDC Data Version
+## IDC data version
 
-Separately from the Python environment, IDC data itself is versioned. Any notebook that
-queries IDC should call and record `client.get_idc_version()` immediately after data
-access, since results are not guaranteed to reproduce across IDC data versions.
-
----
-
-## Update 2026-07-20 (v0.3.0): NumPy pin corrected, idc-index resolved
-
-Two items above were revisited empirically when the execution layer was merged in. Both the
-"Verified Working Configuration" (numpy 2.0.2) and the idc-index open item are updated by the
-findings here; where they conflict, this section is authoritative.
-
-### NumPy 2.x Failure (why the pin is now numpy 1.26.4, not 2.0.2)
-
-pyradiomics 3.0.1 ships a compiled C extension (`_cmatrices`) built against the **NumPy 1.x** C
-ABI. Under **NumPy 2.x it fails at `import radiomics`** with:
-
-```
-ImportError: numpy.core.multiarray failed to import
-```
-
-This was reproduced on a clean Python 3.11 / Linux build, and a **forced source rebuild** of
-pyradiomics against numpy 2.0.2 did **not** fix it — the extension still resolves the NumPy-1.x
-`numpy.core.multiarray` path, which NumPy 2 removed. By contrast, **numpy 1.26.4 was verified end
-to end**: a real feature extraction ran and returned ~107 features, not merely an import.
-
-The earlier `numpy==2.0.2` pin came from an Apple-Silicon Mac where only `import radiomics` was
-checked, never a feature extraction (which is exactly where the ABI mismatch bites). Treat
-**NumPy 1.x as required** for pyradiomics 3.0.1 on any platform until someone verifies a full
-extraction — not just an import — under NumPy 2 on that platform.
-
-This joins the existing pyradiomics-3.1.0 / Python-3.12 failure as the second "pyradiomics is old"
-symptom: different Python and NumPy versions surface different errors, and the fix is the same —
-pin pyradiomics 3.0.1 on **NumPy 1.x** with an older setuptools.
-
-### Reliable build recipe
-
-pyradiomics 3.0.1 also needs an older setuptools (newer ones removed the `install_layout` build
-attribute) and `versioneer` at build time. The verified sequence:
-
-```bash
-pip install "setuptools<65" wheel versioneer "numpy==1.26.4"
-pip install --no-build-isolation pyradiomics==3.0.1
-```
-
-`--no-build-isolation` lets the build see the numpy 1.26.4 and older setuptools already installed,
-instead of pip fetching wrong-version build deps in an isolated sandbox.
-
-### idc-index Coexistence (open item resolved)
-
-idc-index now installs alongside pyradiomics. The blocker was pandas 2.3.3 vs idc-index requiring
-`pandas<=2.2.4`. Pinning **pandas==2.2.3** resolves it: on 2026-07-20, `numpy 1.26.4`,
-`pandas 2.2.3`, `scikit-learn`, `SimpleITK 2.5.x`, `pyradiomics 3.0.1`, and `idc-index 0.12.4` were
-confirmed to import together in one environment, with a real extraction succeeding. idc-index is
-therefore included in `environment.yml` as of v0.3.0.
+Separately from the Python environment, IDC data is versioned. Any notebook that queries IDC
+should call and record `client.get_idc_version()` immediately after data access; results are
+not guaranteed to reproduce across IDC data versions.
