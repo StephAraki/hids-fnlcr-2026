@@ -1,6 +1,6 @@
 # imaging-ml-skill
 
-<img width="2480" height="720" alt="logo_wordmark" src="https://github.com/user-attachments/assets/09ba0230-3f79-4a94-b0f6-6d24c93623e7" />
+<img width="3600" height="1080" alt="v7_3_bare" src="https://github.com/user-attachments/assets/69418400-2f92-41e9-ad96-89b5415cec3e" />
 
 An AI-assisted workflow skill for **cancer imaging machine learning** on NCI Cancer Research Data
 Commons (CRDC) data. It guides a researcher from a plain-language biological question to a
